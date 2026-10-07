@@ -1,6 +1,6 @@
-# ZealMine
+# Zealmine
 
-Minesweeper for the [Zeal 8-bit OS](https://github.com/Zeal8bit/Zeal-8-bit-OS),
+This is remake Minesweeper for the [Zeal 8-bit OS](https://github.com/Zeal8bit/Zeal-8-bit-OS),
 written in C for the Z80. It ships as a single keyboard-driven init program
 that boots straight from the OS disk and stays inside the kernel's 48 KiB init
 RAM limit.
@@ -9,9 +9,9 @@ RAM limit.
 
 ## Screenshots
 
-![Title screen](docs/screenshot_title.png)
-
-![Board](docs/screenshot_board.png)
+| Title screen | Game |
+|---|---|
+| ![Title screen](docs/screenshot_title.png) | ![Game](docs/screenshot_board.png) |
 
 ## Features
 
@@ -24,16 +24,6 @@ RAM limit.
 - Keyboard and gamepad controls (arrows/WASD, Z/Space, X, R, Q).
 - Assets and levels are deterministic from generated data; the field seed
   mixes hardware entropy at start.
-
-## How it fits the 48 KiB init limit
-
-The OS init loader (`LOADER_BIN_MAX_SIZE`, `0xC000`) loads the program to
-`0x4000`, so the whole binary must stay under 49 151 bytes. 8-bit tiles at
-256 B each grow faster than the code, so the versioned tilesets (`tiles.zts`,
-`title.zts`) are packed with a small whole-stream LZ77 codec (window 256,
-see `src/tileset_lz77.c` / `tools/gif2tiles.py`) and decoded straight into
-video RAM on boot. The RC1 build is **43 343 bytes** and a prebuilt copy is
-committed as `bin/zealmine.bin`.
 
 ## Controls
 
