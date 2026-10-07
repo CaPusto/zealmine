@@ -48,10 +48,11 @@ Requirements:
 - SDCC, CMake >= 3.16
 - Python 3 with Pillow (asset pipeline, checks)
 
-Configure a `zealenv.sh`-style environment that exports the paths above, then:
+Configure a [`zealenv.sh`](docs/zealenv.sh) -style environment that exports the paths above, then:
 
 ```sh
 source zealenv.sh
+
 cmake -S . -B build
 cmake --build build -j
 ```
