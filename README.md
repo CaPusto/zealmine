@@ -19,11 +19,8 @@ RAM limit.
   with a press on an already-open cell.
 - Fixed 14x12 board with 30 mines.
 - HUD row: mines left counter, sapper banner, and an MM:SS timer.
-- Title screen, retro divider and soldier background pics, keys hint, and
-  dedicated win / lose banners that swap the soldier's pose in place.
 - Keyboard and gamepad controls (arrows/WASD, Z/Space, X, R, Q).
-- Assets and levels are deterministic from generated data; the field seed
-  mixes hardware entropy at start.
+- Levels are determined by the generated data; the seed value incorporates hardware entropy at the start.
 
 ## Controls
 
@@ -67,9 +64,12 @@ Under the reference emulator, with the OS image that carries the disk:
 ```sh
 zeal-native --rom path/to/zos/os_with_romdisk.img -u bin/zealmine.bin
 ```
+The binary can also simply be copied to the SD card and run from the OS shell
+(note the drive letter, `h:` is the SD card by default):
 
-A bootable disk image for real hardware can be produced with the Zeal-8-bit-OS
-tools; the built binary is flashed there as the init program.
+```sh
+h:/zealmine.bin
+```
 
 ## Real hardware
 
