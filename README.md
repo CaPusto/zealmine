@@ -110,4 +110,6 @@ bin/       prebuilt release binary (RC1)
 
 ## License
 
+This project is a non-commercial fan remake created for preservation and educational purposes.  
+
 [MIT](LICENSE)
