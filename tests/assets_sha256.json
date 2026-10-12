@@ -1,0 +1,19 @@
+{
+  "A_SAPPER_MAKES_ONLY_ONE_MISTAKE.ztm": "6db41529d567f268b601f06b3dbc6efc48cd808c474d8300ef7f95c44139e7cf",
+  "Congratulations.ztm": "5af96db9928bb07f581e67e7a3b1d434f2affa19a0c722d335c595258f3d513e",
+  "Oops.ztm": "3c543cd92c1866cf85b0eb12f49c33a13f0dc00fdf6b04cc7756e497933625d2",
+  "board.zts": "4890b4d14b51d05461aff0da3fd6c73b3fdca555732befa56ab21ce35745c55d",
+  "board_tiles.ztp": "b802ebd81a784865985b0e7e441c0115a1b80cf4a48d2bd3c00e06c8eb8e2016",
+  "divider.zts": "6fbbf134733d09e1d0b7d80346c0f8c36d0b7b7a67b7d80da8c57fc45f1f7f3e",
+  "divider_tiles.ztp": "64a257145ccf6bd3b3bb13db3f40efd2e813a9b342a90cd4ccffee3247c356e6",
+  "retro_divider_320x16.ztm": "2167d14d7024cfe25d4e471264b4f179f522869a35bd63cffbe1645b774ad2f7",
+  "soldier.zts": "f9c146c638588fbe0a4abcdf064bf00fb13ac218f999b9970e576942b555a353",
+  "soldier_congratulations.ztm": "08339ebaf4b2d00144648bc5e46c0181f3f2d77c5b5fdc884b5d847b184859df",
+  "soldier_defeat.ztm": "3791de4c2e0fd0c2a6a8f47bd75e4d850a50e78d77e1742cc4d0905f017528d5",
+  "soldier_neutral.ztm": "f2786ee99040ba393f99cf6c09a98815dd18520008e0de5c3b90a83aa8d5bcf6",
+  "soldier_tiles.ztp": "7ff298da8d17abfed0f55ea8b39cf20b279dabfef8ebc987c7c675724b66a7c8",
+  "title.ztm": "07eab55142560adc11751ef1b69ae145c9a2a4e2cc1d2f13ee164be44002d6f2",
+  "title.ztp": "505d6003973755b281b1bb35da2386b5d890062fad50fb6256e2a1fcf59ee5bd",
+  "title.zts": "154e2ea7e6f86e0a4049c13ab5e4b0dbb394e5737c75222371f01453eb338c45",
+  "use_keys_8bit.ztm": "f939f6097fbd377e53c3aa626291cc040c24642105b9722ce7890780dd6b57a8"
+}

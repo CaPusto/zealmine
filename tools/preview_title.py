@@ -15,7 +15,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from gif2tiles import lz77_decompress
+from tileset_lz77 import lz77_decompress
 
 TS = 16
 COLS = 20
@@ -38,6 +38,7 @@ def rgb565(value):
 def render(assets):
     palette = open(os.path.join(assets, "title.ztp"), "rb").read()
     tiles = decode_rle(open(os.path.join(assets, "title.zts"), "rb").read())
+    tiles = bytes(index for byte in tiles for index in (byte >> 4, byte & 15))
     tilemap = open(os.path.join(assets, "title.ztm"), "rb").read()
 
     if len(tiles) % (TS * TS):

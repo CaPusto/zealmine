@@ -1,64 +1,83 @@
-#include <stdint.h>
-
-#include <zvb_gfx.h>
-
 #include "tileset_lz77.h"
+#include <core.h>
 
-#define ZM_TILE_SIZE 256
+static uint8_t buffer[256];
+static const uint8_t* data;
+static uint16_t remaining;
+static uint8_t invalid;
 
-gfx_error tileset_load_lz77(gfx_context* ctx, const uint8_t* data, uint16_t size,
-                            uint16_t from, uint8_t pal_offset, uint8_t opacity)
+/* Validate command framing once, outside the byte-copying hot loop. */
+static uint8_t valid_stream(const uint8_t* source, uint16_t size)
 {
-    /* Rolling window holding the last 256 decoded bytes, which is exactly what
-     * a back-reference may point into. Every 256-byte tile is handed to the
-     * video board as soon as it completes, so the stream costs no more than a
-     * single tile of RAM. Matches may reach back into the previous tile, hence
-     * the circular indexing through the 256-byte wrap. */
-    static uint8_t win[ZM_TILE_SIZE];
     uint16_t i = 0;
-    uint8_t j = 0;
-    uint16_t tile_count = 0;
-
+    uint8_t pos = 0, history = 0;
     while (i < size) {
-        uint8_t cmd = data[i++];
+        uint8_t cmd = source[i++];
         uint8_t len;
+        if (cmd & 0x80) {
+            len = (cmd & 63) + 1;
+            if (cmd & 0x40) len += 2;
+            if (i == size) return 0;
+            if ((cmd & 0x40) && !history && source[i] >= pos) return 0;
+            i++;
+        } else {
+            len = cmd + 1;
+            if (size - i < len) return 0;
+            i += len;
+        }
+        if ((uint8_t)(pos + len) && (uint8_t)(pos + len) < pos) return 0;
+        pos += len;
+        if (!pos) history = 1;
+    }
+    return 1;
+}
 
+void lz77_init(const uint8_t* source, uint16_t size)
+{
+    data = source;
+    remaining = size;
+    invalid = !valid_stream(source, size);
+}
+
+uint8_t* lz77_buffer(void)
+{
+    return buffer;
+}
+
+int16_t lz77_read(void)
+{
+    if (invalid) return -1;
+    if (!remaining) return 0;
+    const uint8_t* source = data;
+    const uint8_t* end = data + remaining;
+    uint8_t* output = buffer;
+
+    while (source < end) {
+        uint8_t cmd = *source++;
+        uint8_t len;
         if (cmd & 0x80) {
             if (cmd & 0x40) {
-                /* Back-reference: (cmd & 0x3F) + 3 bytes from offset + 1. */
-                uint16_t offset = data[i++] + 1;
-                len = (cmd & 0x3F) + 3;
-                while (len--) {
-                    win[j] = win[(uint8_t)(j - offset)];
-                    j++;
-                }
+                uint8_t offset = *source++ + 1;
+                uint8_t back = (uint8_t)(output - buffer) - offset;
+                len = (cmd & 63) + 3;
+                /* Circular and overlapping references require forward copying. */
+                while (len--)
+                    *output++ = buffer[back++];
             } else {
-                /* RLE run: (cmd & 0x3F) + 1 copies of the next byte. */
-                uint8_t value = data[i++];
-                len = (cmd & 0x3F) + 1;
-                while (len--) {
-                    win[j++] = value;
-                }
+                uint8_t value = *source++;
+                len = (cmd & 63) + 1;
+                mem_set(output, value, len);
+                output += len;
             }
         } else {
-            /* Literal run: cmd + 1 raw bytes. */
             len = cmd + 1;
-            while (len--) {
-                win[j++] = data[i++];
-            }
+            mem_cpy(output, source, len);
+            output += len;
+            source += len;
         }
-
-        if (j == 0) {
-            /* A whole tile just wrapped around the window: give it to the board. */
-            gfx_error err = gfx_tileset_load_none(
-                ctx, win, ZM_TILE_SIZE,
-                (uint16_t)(from + (uint16_t)tile_count * ZM_TILE_SIZE),
-                pal_offset, opacity);
-            if (err)
-                return err;
-            tile_count++;
-        }
+        if (output == buffer + sizeof(buffer)) break;
     }
-
-    return GFX_SUCCESS;
+    remaining -= source - data;
+    data = source;
+    return output - buffer;
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" orientation="orthogonal" renderorder="right-down" width="6" height="4" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="board_tiles.tsx" />
+ <layer id="1" name="Artwork" width="6" height="4">
+  <data encoding="csv">
+11,12,13,14,15,16,
+27,28,29,30,31,32,
+43,44,45,46,47,48,
+59,60,61,62,63,64
+</data>
+ </layer>
+</map>

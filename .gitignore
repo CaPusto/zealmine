@@ -1,7 +1,9 @@
+bin/*
 build/
 build-*/
 debug/
 log/
+tmp/
 *.dbg
 __pycache__/
 *.pyc

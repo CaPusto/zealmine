@@ -3,11 +3,12 @@
 
 #include <stdint.h>
 
-#include <zvb_gfx.h>
-
-/* Decompress a .zts stream into the video board's tileset, the way the game
- * reads the assets tools/gif2tiles.py now emits instead of SDK RLE. */
-gfx_error tileset_load_lz77(gfx_context* ctx, const uint8_t* data, uint16_t size,
-                            uint16_t from, uint8_t pal_offset, uint8_t opacity);
+/* One sequential byte stream with a shared 256-byte history/output buffer.
+ * Copy/upload returned bytes before reading again; do not modify the buffer. */
+void lz77_init(const uint8_t* data, uint16_t size);
+uint8_t* lz77_buffer(void);
+/* Returns 1..256 decoded bytes, 0 at EOF, or -1 for an invalid stream.
+ * Commands cannot cross a 256-byte output boundary. No pixel-format knowledge. */
+int16_t lz77_read(void);
 
 #endif

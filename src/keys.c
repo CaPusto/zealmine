@@ -1,5 +1,5 @@
 #include <stdint.h>
-#include <string.h>
+#include <core.h>
 
 #include <zos_errors.h>
 #include <zos_keyboard.h>
@@ -85,7 +85,7 @@ int keys_init(void)
     if (err != ERR_SUCCESS)
         return 1;
 
-    memset(held, 0, sizeof(held));
+    mem_set(held, 0, sizeof(held));
     released = 0;
     pending = 0;
 
@@ -96,7 +96,7 @@ void keys_deinit(void)
 {
     /* Whoever starts us expects the line editor back. */
     ioctl(DEV_STDIN, KB_CMD_SET_MODE, (void*)(KB_MODE_COOKED | KB_READ_NON_BLOCK));
-    memset(held, 0, sizeof(held));
+    mem_set(held, 0, sizeof(held));
     released = 0;
     pending = 0;
 }
