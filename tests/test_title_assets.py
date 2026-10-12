@@ -14,12 +14,18 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from pack_title import pack_title
 from tileset_lz77 import lz77_compress, lz77_decompress
+from preview_title import compare, render
 
 # Decoded title VRAM before the 4bpp storage change, including blank tile 0.
 TITLE_VRAM_SHA256 = "d6994367977ec57833ef0616688fd3dc427426a7687687c513b8180f1f31346e"
 
 
 class TitleTests(unittest.TestCase):
+    def test_built_title_preview_matches_source(self):
+        preview = render(ROOT / "build" / "assets")
+        with Image.open(ROOT / "assets" / "zeal_mine_title.gif") as source:
+            self.assertEqual(compare(preview, source), [])
+
     def test_byte_decoder_independent_of_graphics(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)

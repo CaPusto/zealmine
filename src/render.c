@@ -136,7 +136,7 @@ gfx_error render_start_game(void)
     err = assets_load(&vctx);
     if (err)
         return err;
-    gfx_enable_screen(1);
+    render_clear();
     return GFX_SUCCESS;
 }
 
