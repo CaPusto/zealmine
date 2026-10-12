@@ -1,4 +1,5 @@
 #include "tileset_lz77.h"
+#include <core.h>
 
 static uint8_t buffer[256];
 static const uint8_t* data;
@@ -45,40 +46,38 @@ uint8_t* lz77_buffer(void)
 
 int16_t lz77_read(void)
 {
-    const uint8_t* source = data;
-    uint16_t i = 0;
-    uint8_t pos = 0;
     if (invalid) return -1;
+    if (!remaining) return 0;
+    const uint8_t* source = data;
+    const uint8_t* end = data + remaining;
+    uint8_t* output = buffer;
 
-    while (i < remaining) {
-        uint8_t cmd = source[i++];
+    while (source < end) {
+        uint8_t cmd = *source++;
         uint8_t len;
         if (cmd & 0x80) {
             if (cmd & 0x40) {
-                uint8_t offset = source[i++] + 1;
+                uint8_t offset = *source++ + 1;
+                uint8_t back = (uint8_t)(output - buffer) - offset;
                 len = (cmd & 63) + 3;
-                while (len--) {
-                    buffer[pos] = buffer[(uint8_t)(pos - offset)];
-                    pos++;
-                }
-            } else {
-                uint8_t value = source[i++];
-                len = (cmd & 63) + 1;
+                /* Circular and overlapping references require forward copying. */
                 while (len--)
-                    buffer[pos++] = value;
+                    *output++ = buffer[back++];
+            } else {
+                uint8_t value = *source++;
+                len = (cmd & 63) + 1;
+                mem_set(output, value, len);
+                output += len;
             }
         } else {
             len = cmd + 1;
-            while (len--)
-                buffer[pos++] = source[i++];
+            mem_cpy(output, source, len);
+            output += len;
+            source += len;
         }
-        if (!pos) {
-            data += i;
-            remaining -= i;
-            return 256;
-        }
+        if (output == buffer + sizeof(buffer)) break;
     }
-    data += i;
-    remaining = 0;
-    return pos;
+    remaining -= source - data;
+    data = source;
+    return output - buffer;
 }

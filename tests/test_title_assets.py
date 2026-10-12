@@ -25,6 +25,7 @@ class TitleTests(unittest.TestCase):
             directory = Path(directory)
             harness = directory / "decoder"
             subprocess.run(["cc", "-std=c99", "-Wall", "-Wextra", "-Werror",
+                            "-I" + str(ROOT / "tests" / "stubs"),
                             "-I" + str(ROOT / "src"), str(ROOT / "tests" / "test_lz77.c"),
                             str(ROOT / "src" / "tileset_lz77.c"), "-o", str(harness)], check=True)
             rng = random.Random(9)
