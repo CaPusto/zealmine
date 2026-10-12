@@ -54,51 +54,35 @@ target_compile_options(${target_name} PRIVATE
 # -------------------------------
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-set(TILES_GIF ${CMAKE_CURRENT_LIST_DIR}/assets/tiles.gif)
-set(TILES_GEN ${CMAKE_CURRENT_LIST_DIR}/tools/gif2image.py)
 set(ASSETS_DIR ${CMAKE_BINARY_DIR}/assets)
-
-# SDK conversion owns base tile slicing and RGB565 palette generation.
-# Stage the input under a distinct name so SDK outputs do not collide with the
-# final merged assets. Leave tiles raw for the merger's existing LZ77 codec.
-configure_file(${TILES_GIF} ${CMAKE_BINARY_DIR}/base_tiles.gif COPYONLY)
-gif2zeal(${target_name} BIT 8 COLORS 256
-    FILES ${CMAKE_BINARY_DIR}/base_tiles.gif)
-set(BASE_TILES ${ASSETS_DIR}/base_tiles.zts)
-set(BASE_PALETTE ${ASSETS_DIR}/base_tiles.ztp)
 set(TILESET_CODEC ${CMAKE_CURRENT_LIST_DIR}/tools/tileset_lz77.py)
+set(BOARD_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/board_tiles.gif)
+set(BOARD_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/board_tiles.tsx)
 
-# Pictures drawn over the board cannot have a tileset of their own -- the video
-# board keeps one for the whole screen -- so they share the sheet's palette and
-# are merged into its tileset, each leaving a .ztm of the tile indices it landed
-# on. Adding another one, such as the win and lose pictures, is one word in
-# BOARD_IMAGES.
+# The authored atlas owns tile indices shared by gameplay and picture maps.
+gif2zeal(${target_name} BIT 8 COLORS 256 FILES ${BOARD_ATLAS})
+set(BOARD_RAW ${ASSETS_DIR}/board_tiles.zts)
+set(BOARD_PALETTE ${ASSETS_DIR}/board_tiles.ztp)
+
 set(BOARD_IMAGES use_keys_8bit A_SAPPER_MAKES_ONLY_ONE_MISTAKE retro_divider_320x16 soldier_neutral Congratulations Oops soldier_congratulations soldier_defeat)
-
-set(BOARD_IMAGE_ARGS)
 set(BOARD_IMAGE_ZTMS)
-set(BOARD_IMAGE_GIFS)
 foreach(image IN LISTS BOARD_IMAGES)
-    set(gif ${CMAKE_CURRENT_LIST_DIR}/assets/${image}.gif)
-    list(APPEND BOARD_IMAGE_GIFS ${gif})
-    list(APPEND BOARD_IMAGE_ARGS
-         -o ${gif}
-         -m ${ASSETS_DIR}/${image}.ztm)
-    list(APPEND BOARD_IMAGE_ZTMS ${ASSETS_DIR}/${image}.ztm)
+    set(tmx ${CMAKE_CURRENT_LIST_DIR}/assets/${image}.tmx)
+    set(ztm ${ASSETS_DIR}/${image}.ztm)
+    tiled2zeal(${target_name} LAYER 1 FILES ${tmx})
+    # SDK conversion depends on the TMX; also track its authored tileset.
+    add_custom_command(OUTPUT ${ztm} APPEND
+        DEPENDS ${BOARD_TILESET} ${BOARD_ATLAS})
+    list(APPEND BOARD_IMAGE_ZTMS ${ztm})
 endforeach()
 
 add_custom_command(
-    OUTPUT ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp ${BOARD_IMAGE_ZTMS}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${ASSETS_DIR}
-    COMMAND ${Python3_EXECUTABLE} ${TILES_GEN}
-            --base-tileset ${BASE_TILES}
-            --base-palette ${BASE_PALETTE}
-            -t ${ASSETS_DIR}/tiles.zts
-            -p ${ASSETS_DIR}/tiles.ztp
-            ${BOARD_IMAGE_ARGS}
-    DEPENDS ${BASE_TILES} ${BASE_PALETTE}
-            ${TILES_GEN} ${TILESET_CODEC} ${BOARD_IMAGE_GIFS}
-    COMMENT "Converting assets/tiles.gif"
+    OUTPUT ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp
+    COMMAND ${Python3_EXECUTABLE} ${TILESET_CODEC}
+            -i ${BOARD_RAW} -o ${ASSETS_DIR}/tiles.zts
+    COMMAND ${CMAKE_COMMAND} -E copy ${BOARD_PALETTE} ${ASSETS_DIR}/tiles.ztp
+    DEPENDS ${BOARD_RAW} ${BOARD_PALETTE} ${TILESET_CODEC}
+    COMMENT "Packing SDK board tiles"
     VERBATIM
 )
 

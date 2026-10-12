@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" orientation="orthogonal" renderorder="right-down" width="6" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
+ <tileset firstgid="1" source="board_tiles.tsx" />
+ <layer id="1" name="Artwork" width="6" height="8">
+  <data encoding="csv">
+153,154,155,156,157,158,
+173,174,175,176,177,178,
+193,194,195,196,197,198,
+213,214,215,216,217,218,
+233,234,235,236,237,238,
+253,254,255,256,257,258,
+273,274,275,276,277,278,
+293,294,295,296,297,298
+</data>
+ </layer>
+</map>

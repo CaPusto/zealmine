@@ -55,7 +55,7 @@ cmake --build build -j
 ```
 
 The result lands in `bin/zealmine.bin`. The tile assets are regenerated from
-the source GIFs in `assets/` at build time.
+the source GIFs and Tiled layouts in `assets/` at build time.
 
 ## Building with ZDE
 
@@ -108,10 +108,10 @@ python tools/preview_title.py -a build/assets
 ## Layout
 
 ```
-assets/    source GIFs (tiles, title, banners, soldier poses)
+assets/    board atlas, Tiled layouts, title GIF
 src/       game, renderer, field logic, LZ77 tileset decoder
-tools/     asset generators, checks, emulator driver (run_emu.py)
-tests/     host C unit tests
+tools/     asset packing, checks, emulator driver (run_emu.py)
+tests/     host C and asset regression tests
 docs/      screenshots
 bin/       prebuilt release binary (RC1)
 ```

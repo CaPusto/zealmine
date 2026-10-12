@@ -1,5 +1,8 @@
 """Repo-specific tileset codec shared by asset builders and previews."""
 
+import argparse
+from pathlib import Path
+
 TS = 16
 
 
@@ -65,6 +68,28 @@ def lz77_compress(data, window=256):
     return bytes(out)
 
 
+def main():
+    """Compress SDK raw 8bpp tiles without changing their order."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("-i", required=True, type=Path, help="raw 8bpp tileset")
+    parser.add_argument("-o", required=True, type=Path, help="LZ77 output tileset")
+    args = parser.parse_args()
+    try:
+        data = args.i.read_bytes()
+        if not data:
+            parser.error("input tileset is empty")
+        if len(data) % (TS * TS):
+            parser.error("input must contain whole 256-byte tiles")
+        if len(data) > 256 * TS * TS:
+            parser.error("input exceeds 256 tiles")
+        packed = lz77_compress(data)
+        if len(packed) > 0xFFFF:
+            parser.error("compressed output exceeds 65,535 bytes")
+        args.o.write_bytes(packed)
+    except OSError as error:
+        parser.exit(1, f"{error}\n")
+
+
 def lz77_decompress(data):
     """Inverse of lz77_compress, used by the preview tools."""
     out = bytearray()
@@ -87,5 +112,9 @@ def lz77_decompress(data):
             for _ in range(length):
                 out.append(out[-offset])
     return bytes(out)
+
+
+if __name__ == "__main__":
+    main()
 
 

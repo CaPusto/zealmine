@@ -55,9 +55,7 @@ uint16_t title_assets_palette_size(void);
 uint16_t title_assets_tiles_size(void);
 const uint8_t* title_assets_tilemap_at(uint16_t offset);
 
-/* The keys hint has no palette or tileset of its own: tools/gif2image.py
-   merged both into the board's, and this is only the map of where its tiles
-   ended up. */
+/* The keys hint map references the shared board atlas and palette. */
 const uint8_t* keys_assets_tilemap_at(uint16_t offset);
 
 /* Same arrangement for the sapper's banner on the HUD row. */

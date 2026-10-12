@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Decodes the generated .zts/.ztp asset pair and renders a preview PNG.
 
-This checks what the game actually receives from the asset pipeline, rather
-than what tools/make_tiles.py intended to produce.
+This checks the tiles and palette the game receives from the asset pipeline.
 """
 
 import os
