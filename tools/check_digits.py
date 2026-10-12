@@ -32,7 +32,7 @@ DIGIT_RGB = {
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from gif2tiles import lz77_decompress
+from tileset_lz77 import lz77_decompress
 
 TS = 16
 DIGITS = (1, 2, 3, 4, 5, 6, 7, 8)

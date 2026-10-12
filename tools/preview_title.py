@@ -15,7 +15,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from gif2tiles import lz77_decompress
+from tileset_lz77 import lz77_decompress
 
 TS = 16
 COLS = 20

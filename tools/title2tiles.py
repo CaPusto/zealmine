@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Converts a full screen title GIF into the Zeal .ztp/.zts/.ztm triplet.
 
-Unlike tools/gif2tiles.py, which expects a tilesheet and keeps every tile as it
-is, this builds a tilemap: the screen is sliced into 16x16 tiles, identical
-tiles are shared, and the result is written out as a palette, an RLE tileset and
-a byte per cell tilemap.
+Unlike SDK gif2zeal, which can share identical tiles but cannot fit an
+oversized image into VRAM, this builds a fitted tilemap. The screen is sliced
+into 16x16 tiles, identical tiles are shared, and the result is written as a
+palette, an LZ77 tileset and a byte per cell tilemap.
 
 The Zeal 8-bit Video Board keeps the tileset in 64 KiB of VRAM, which is 256
 tiles of 256 bytes. A 320x240 screen needs 300 tiles, so a detailed image runs
@@ -21,7 +21,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from gif2tiles import TS, lz77_compress
+from tileset_lz77 import TS, lz77_compress
 
 # Palette index 0 is the one the video board treats as transparent, so it is kept
 # out of the image and carries a spare fully transparent tile instead. The HUD,
