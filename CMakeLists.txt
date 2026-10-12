@@ -102,21 +102,21 @@ add_custom_command(
     VERBATIM
 )
 
-# The title is a whole screen, so it needs a tilemap of its own on top of the
-# palette and tileset, and the tileset has to be trimmed to fit in tiles VRAM.
+# The source title already fits VRAM and reserves palette index 0. SDK
+# conversion is lossless; only blank-tile indexing and LZ77 packing remain.
 set(TITLE_GIF ${CMAKE_CURRENT_LIST_DIR}/assets/zeal_mine_title.gif)
-set(TITLE_GEN ${CMAKE_CURRENT_LIST_DIR}/tools/title2tiles.py)
+gif2zeal(${target_name} BIT 8 COLORS 256 UNIQUE TILEMAP FILES ${TITLE_GIF})
+set(TITLE_RAW ${ASSETS_DIR}/zeal_mine_title)
+set(TITLE_PACKER ${CMAKE_CURRENT_LIST_DIR}/tools/pack_title.py)
 
 add_custom_command(
     OUTPUT ${ASSETS_DIR}/title.ztp ${ASSETS_DIR}/title.zts ${ASSETS_DIR}/title.ztm
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${ASSETS_DIR}
-    COMMAND ${Python3_EXECUTABLE} ${TITLE_GEN}
-            -i ${TITLE_GIF}
-            -p ${ASSETS_DIR}/title.ztp
-            -t ${ASSETS_DIR}/title.zts
-            -m ${ASSETS_DIR}/title.ztm
-    DEPENDS ${TITLE_GIF} ${TITLE_GEN} ${TILESET_CODEC}
-    COMMENT "Converting assets/zeal_mine_title.gif"
+    COMMAND ${Python3_EXECUTABLE} ${TITLE_PACKER}
+            -i ${TITLE_RAW}
+            -o ${ASSETS_DIR}/title
+    DEPENDS ${TITLE_RAW}.zts ${TITLE_RAW}.ztp ${TITLE_RAW}.ztm
+            ${TITLE_PACKER} ${TILESET_CODEC}
+    COMMENT "Packing SDK title assets"
     VERBATIM
 )
 

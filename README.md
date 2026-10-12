@@ -45,18 +45,25 @@ Requirements:
 - SDCC, CMake >= 3.16
 - Python 3 with Pillow (asset pipeline, checks)
 
-Build through the Zeal dev environment, which supplies the toolchain and SDK paths:
+Configure a [`zealenv.sh`](docs/zealenv.sh) -style environment that exports the paths above, then:
+
+```sh
+source zealenv.sh
+
+cmake -S . -B build
+cmake --build build -j
+```
+
+The result lands in `bin/zealmine.bin`. The tile assets are regenerated from
+the source GIFs in `assets/` at build time.
+
+## Building with ZDE
+
+The Zeal Dev Environment supplies the toolchain and SDK paths. From the project directory, run:
 
 ```sh
 zde cmake
 ```
-
-The result lands in `bin/zealmine.bin`. The tile assets are regenerated from
-the source GIFs in `assets/` at build time. SDK `gif2zeal()` converts the base
-sheet into raw tiles and an RGB565 palette. `tools/gif2image.py` merges overlays
-into those assets; `tools/title2tiles.py` fits the title into tileset VRAM. Both
-use the repo-specific codec in `tools/tileset_lz77.py`, preserving the final
-LZ77 format read by the game. This format differs from SDK PR #26's LZ format.
 
 ## Running
 

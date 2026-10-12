@@ -115,7 +115,7 @@ void render_title(void)
     tilemap_scroll(LAYER1, 0, 0);
 
     /* The title has no tile of its own for the HUD layer, so it is cleared with
-       the blank tile tools/title2tiles.py keeps at index 0 for this purpose. */
+       the blank tile tools/pack_title.py keeps at index 0 for this purpose. */
     tilemap_fill(&vctx, LAYER1, TILE_TITLE_BLANK, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
 
     render_image(LAYER0, 0, 0, SCREEN_TILES_X, SCREEN_TILES_Y,

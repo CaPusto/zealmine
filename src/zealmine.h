@@ -72,7 +72,7 @@
 
 #define TILE_COUNT 28
 
-/* tools/title2tiles.py keeps one fully transparent tile at index 0 of the title
+/* tools/pack_title.py keeps one fully transparent tile at index 0 of the title
    tileset, so layer 1 can be cleared while the title owns the tiles. */
 #define TILE_TITLE_BLANK 0
 
