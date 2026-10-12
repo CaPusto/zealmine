@@ -26,6 +26,7 @@ add_executable(${target_name}
     src/render.c
     src/field.c
     src/tileset_lz77.c
+    src/tileset_loader.c
 )
 
 target_include_directories(${target_name} PRIVATE src)
@@ -141,11 +142,11 @@ set(DIGITS_CHECKED ${CMAKE_BINARY_DIR}/.digits_checked)
 add_custom_command(
     OUTPUT ${DIGITS_CHECKED}
     COMMAND ${Python3_EXECUTABLE} ${DIGITS_CHECK}
-            --zts ${ASSETS_DIR}/tiles.zts
-            --ztp ${ASSETS_DIR}/tiles.ztp
-            --header ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h
+            --zts ${ASSETS_DIR}/board.zts
+            --ztp ${ASSETS_DIR}/board_tiles.ztp
+            --bit 4 --header ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h
     COMMAND ${CMAKE_COMMAND} -E touch ${DIGITS_CHECKED}
-    DEPENDS ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp
+    DEPENDS ${ASSETS_DIR}/board.zts ${ASSETS_DIR}/board_tiles.ztp
             ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h ${DIGITS_CHECK} ${TILESET_CODEC}
     COMMENT "Checking number tiles against TILE_NUM* constants"
     VERBATIM

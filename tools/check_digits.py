@@ -117,6 +117,7 @@ def main():
     ap.add_argument("--zts", required=True)
     ap.add_argument("--ztp", required=True)
     ap.add_argument("--header", required=True)
+    ap.add_argument("--bit", type=int, choices=(4, 8), default=8)
     args = ap.parse_args()
 
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -129,8 +130,10 @@ def main():
         sys.exit("TILE_NUM constants must point at tiles 0..7 once each")
 
     raw = lz77_decompress(open(args.zts, "rb").read())
+    if args.bit == 4:
+        raw = bytes(n for byte in raw for n in (byte >> 4, byte & 15))
     pal = open(args.ztp, "rb").read()
-    pal565 = [struct.unpack("<H", pal[i * 2 : i * 2 + 2])[0] for i in range(256)]
+    pal565 = [struct.unpack("<H", pal[i * 2 : i * 2 + 2])[0] for i in range(len(pal) // 2)]
 
     ok = True
     for digit in DIGITS:

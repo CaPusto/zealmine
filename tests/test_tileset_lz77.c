@@ -3,35 +3,37 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "tileset_lz77.h"
+#include "tileset_loader.h"
 
 static uint8_t vram[65536];
-static unsigned uploads;
+static unsigned uploads, uploaded;
 static gfx_error upload_error;
 
 gfx_error gfx_tileset_load_none(gfx_context* ctx, uint8_t* tiles, uint16_t size,
                               uint16_t from, uint8_t offset, uint8_t opacity)
 {
     unsigned tile_size = ctx->bpp == 4 ? 128 : 256;
-    assert(size == tile_size && from == uploads * tile_size);
+    assert(size <= 256 && size % tile_size == 0 && from == uploaded);
 
     if (upload_error) return upload_error;
     for (unsigned i = 0; i < size; i++)
         vram[from + i] = (opacity && tiles[i] == 0) ? 0 : tiles[i] + offset;
     uploads++;
+    uploaded += size;
     return GFX_SUCCESS;
 }
 
 gfx_error gfx_tileset_load_4bit(gfx_context* ctx, uint8_t* tiles, uint16_t size,
                                uint16_t from, uint8_t offset, uint8_t opacity)
 {
-    assert(ctx->bpp == 8 && size == 128 && from == uploads * 256);
+    assert(ctx->bpp == 8 && size <= 256 && size % 128 == 0 && from == uploaded);
     if (upload_error) return upload_error;
     for (unsigned i = 0; i < size * 2u; i++) {
         uint8_t index = (i & 1) ? tiles[i / 2] & 15 : tiles[i / 2] >> 4;
         vram[from + i] = (opacity && index == 0) ? 0 : index + offset;
     }
     uploads++;
+    uploaded += size * 2u;
     return GFX_SUCCESS;
 }
 
@@ -56,15 +58,13 @@ int main(int argc, char** argv)
     gfx_context ctx = {(uint8_t)(strcmp(argv[1], "expand") == 0 ? 8 : atoi(argv[1]))};
     unsigned tile_size = ctx.bpp == 4 ? 128 : 256;
     assert(size > 0 && size < 65536 && pixels % tile_size == 0);
-    gfx_error (*load)(gfx_context*, const uint8_t*, uint16_t, uint16_t, uint8_t, uint8_t)
-        = strcmp(argv[1], "expand") == 0 ? tileset_load_lz77_4bit :
-          strcmp(argv[1], "4") == 0 ? tileset_load_lz77_4bit : tileset_load_lz77;
-    assert(load(&ctx, packed, (uint16_t)size, 0, offset, opacity) == GFX_SUCCESS);
-    assert(uploads == pixels / tile_size);
+    uint8_t is_packed = strcmp(argv[1], "8") != 0;
+    assert(tileset_load_lz77(&ctx, packed, (uint16_t)size, 0, offset, opacity, is_packed) == GFX_SUCCESS);
+    assert(uploaded == pixels);
     assert(memcmp(vram, expected, pixels) == 0);
-    uploads = 0;
+    uploads = uploaded = 0;
     upload_error = GFX_INVALID_ARG;
-    assert(load(&ctx, packed, (uint16_t)size, 0, offset, opacity) == GFX_INVALID_ARG);
+    assert(tileset_load_lz77(&ctx, packed, (uint16_t)size, 0, offset, opacity, is_packed) == GFX_INVALID_ARG);
     assert(uploads == 0);
     return 0;
 }

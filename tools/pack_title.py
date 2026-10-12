@@ -31,7 +31,7 @@ def pack_title(source, output):
     if any(byte >> 4 == 0 or byte & 0x0F == 0 for byte in tiles):
         raise ValueError("title artwork must reserve palette index 0 for transparency")
 
-    packed = lz77_compress(bytes(tile_size) + tiles, tile_size=tile_size)
+    packed = lz77_compress(bytes(tile_size) + tiles)
     if len(packed) > 0xFFFF:
         raise ValueError("compressed title exceeds the 16-bit loader size")
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -3,15 +3,12 @@
 
 #include <stdint.h>
 
-#include <zvb_gfx.h>
-
-/* Decompress the repo-specific LZ77 .zts stream emitted by the asset builders
- * using tools/tileset_lz77.py, rather than SDK RLE or LZ. */
-gfx_error tileset_load_lz77(gfx_context* ctx, const uint8_t* data, uint16_t size,
-                            uint16_t from, uint8_t pal_offset, uint8_t opacity);
-
-/* Decode packed 4bpp tiles: native 4bpp upload or SDK expansion into 8bpp. */
-gfx_error tileset_load_lz77_4bit(gfx_context* ctx, const uint8_t* data, uint16_t size,
-                              uint16_t from, uint8_t pal_offset, uint8_t opacity);
+/* One sequential byte stream with a shared 256-byte history/output buffer.
+ * Copy/upload returned bytes before reading again; do not modify the buffer. */
+void lz77_init(const uint8_t* data, uint16_t size);
+uint8_t* lz77_buffer(void);
+/* Returns 1..256 decoded bytes, 0 at EOF, or -1 for an invalid stream.
+ * Commands cannot cross a 256-byte output boundary. No pixel-format knowledge. */
+int16_t lz77_read(void);
 
 #endif

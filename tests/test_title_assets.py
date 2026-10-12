@@ -20,6 +20,21 @@ TITLE_VRAM_SHA256 = "d6994367977ec57833ef0616688fd3dc427426a7687687c513b8180f1f3
 
 
 class TitleTests(unittest.TestCase):
+    def test_byte_decoder_independent_of_graphics(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            harness = directory / "decoder"
+            subprocess.run(["cc", "-std=c99", "-Wall", "-Wextra", "-Werror",
+                            "-I" + str(ROOT / "src"), str(ROOT / "tests" / "test_lz77.c"),
+                            str(ROOT / "src" / "tileset_lz77.c"), "-o", str(harness)], check=True)
+            rng = random.Random(9)
+            fixtures = [rng.randbytes(n) for n in [0, 1, 255, 256, 257, 4097]]
+            fixtures += [b"ABC" * 1400, bytes(range(256)) * 3 + b"end", bytes(1025)]
+            for raw in fixtures:
+                stream, expected = directory / "stream", directory / "expected"
+                stream.write_bytes(lz77_compress(raw)); expected.write_bytes(raw)
+                subprocess.run([str(harness), str(stream), str(expected)], check=True)
+
     def test_title_source_fits_4bit(self):
         with Image.open(ROOT / "assets" / "zeal_mine_title.gif") as image:
             self.assertEqual(image.size, (320, 240))
@@ -52,7 +67,8 @@ class TitleTests(unittest.TestCase):
             subprocess.run(["cc", "-std=c99", "-Wall", "-Wextra", "-Werror",
                             "-I" + str(ROOT / "tests" / "stubs"), "-I" + str(ROOT / "src"),
                             str(ROOT / "tests" / "test_tileset_lz77.c"),
-                            str(ROOT / "src" / "tileset_lz77.c"), "-o", str(harness)], check=True)
+                            str(ROOT / "src" / "tileset_lz77.c"),
+                            str(ROOT / "src" / "tileset_loader.c"), "-o", str(harness)], check=True)
             expected = directory / "pixels.raw"
             expected.write_bytes(raw)
             # Odd tile count tests the final half-window; packed native VRAM pages
@@ -67,7 +83,7 @@ class TitleTests(unittest.TestCase):
             packed = bytes((random_pixels[i] << 4) | random_pixels[i + 1]
                            for i in range(0, len(random_pixels), 2))
             expected.write_bytes(packed)
-            output.with_suffix(".zts").write_bytes(lz77_compress(packed, tile_size=128))
+            output.with_suffix(".zts").write_bytes(lz77_compress(packed))
             subprocess.run([str(harness), "4", str(output.with_suffix(".zts")), str(expected)], check=True)
 
     def test_gameplay_expansion_and_palette_offsets(self):
@@ -78,7 +94,8 @@ class TitleTests(unittest.TestCase):
             subprocess.run(["cc", "-std=c99", "-Wall", "-Wextra", "-Werror",
                             "-I" + str(ROOT / "tests" / "stubs"), "-I" + str(ROOT / "src"),
                             str(ROOT / "tests" / "test_tileset_lz77.c"),
-                            str(ROOT / "src" / "tileset_lz77.c"), "-o", str(harness)], check=True)
+                            str(ROOT / "src" / "tileset_lz77.c"),
+                            str(ROOT / "src" / "tileset_loader.c"), "-o", str(harness)], check=True)
             for name, offset, mode in [("board", 41, "expand"), ("divider", 55, "expand"),
                                        ("soldier", 0, "8")]:
                 stream = ROOT / "build" / "assets" / f"{name}.zts"
@@ -92,7 +109,7 @@ class TitleTests(unittest.TestCase):
             raw = bytes(random.Random(7).choices(range(16), k=3 * 256))
             packed = bytes((raw[i] << 4) | raw[i + 1] for i in range(0, len(raw), 2))
             stream = directory / "odd.zts"
-            stream.write_bytes(lz77_compress(packed, tile_size=128))
+            stream.write_bytes(lz77_compress(packed))
             expected.write_bytes(bytes(index + 14 if index else 0 for index in raw))
             subprocess.run([str(harness), "expand", str(stream), str(expected), "14", "1"], check=True)
 

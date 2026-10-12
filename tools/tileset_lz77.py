@@ -6,26 +6,20 @@ from pathlib import Path
 TS = 16
 
 
-def lz77_compress(data, window=256, tile_size=TS * TS):
-    """Pack a tileset with LZ77; tile_size is 256 for 8bpp, 128 for 4bpp.
+def lz77_compress(data, window=256):
+    """Compress bytes with commands confined to 256-byte output blocks.
 
-    Command byte, high bit first:
-      0x00-0x7F  literal run of (b + 1) raw bytes
-      0x80-0xBF  run of (b & 0x3F) + 1 copies of the next byte
-      0xC0-0xFF  back-ref of (b & 0x3F) + 3 bytes at offset (next byte) + 1,
-                 where the offset counts back into the last 256 bytes of output
-
-    Commands may not cross tile_size boundaries: the decoder uploads each
-    complete tile through the SDK, so a command that straddled a boundary
-    would desynchronise the tiles. It keeps a 256-byte circular window so a
-    back-ref may still reach across the previous tile boundary's last bytes.
+    0x00..0x7F: literal run of cmd + 1 bytes.
+    0x80..0xBF: repeat the next byte (cmd & 63) + 1 times.
+    0xC0..0xFF: copy (cmd & 63) + 3 bytes from next_byte + 1 bytes back.
+    History spans output blocks; the final block may contain fewer bytes.
     """
     out = bytearray()
     n = len(data)
     pos = 0
     while pos < n:
         rem = n - pos
-        rem_tile = tile_size - (pos % tile_size)
+        rem_tile = 256 - (pos % 256)
         run = 1
         while run < min(rem, 64, rem_tile) and data[pos + run] == data[pos]:
             run += 1
@@ -87,7 +81,7 @@ def main():
         data = b"".join(inputs)
         if len(data) > 256 * args.tile_size:
             parser.error("input exceeds 256 tiles")
-        packed = lz77_compress(data, tile_size=args.tile_size)
+        packed = lz77_compress(data)
         if len(packed) > 0xFFFF:
             parser.error("compressed output exceeds 65,535 bytes")
         args.o.write_bytes(packed)

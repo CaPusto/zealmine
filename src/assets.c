@@ -7,7 +7,7 @@
 #include <zvb_gfx.h>
 
 #include "assets.h"
-#include "tileset_lz77.h"
+#include "tileset_loader.h"
 
 gfx_error assets_load(gfx_context* ctx)
 {
@@ -18,19 +18,19 @@ gfx_error assets_load(gfx_context* ctx)
         (uint16_t)(&_soldier_palette_end - &_soldier_palette_start), 0);
     if (err) return err;
     err = tileset_load_lz77(ctx, &_soldier_tiles_start,
-        (uint16_t)(&_soldier_tiles_end - &_soldier_tiles_start), 102 * 256u, 0, 1);
+        (uint16_t)(&_soldier_tiles_end - &_soldier_tiles_start), 102 * 256u, 0, 1, 0);
     if (err) return err;
     err = gfx_palette_load(ctx, &_board_palette_start,
         (uint16_t)(&_board_palette_end - &_board_palette_start), 41);
     if (err) return err;
-    err = tileset_load_lz77_4bit(ctx, &_board_tiles_start,
-        (uint16_t)(&_board_tiles_end - &_board_tiles_start), 0, 41, 1);
+    err = tileset_load_lz77(ctx, &_board_tiles_start,
+        (uint16_t)(&_board_tiles_end - &_board_tiles_start), 0, 41, 1, 1);
     if (err) return err;
     err = gfx_palette_load(ctx, &_divider_palette_start,
         (uint16_t)(&_divider_palette_end - &_divider_palette_start), 55);
     if (err) return err;
-    err = tileset_load_lz77_4bit(ctx, &_divider_tiles_start,
-        (uint16_t)(&_divider_tiles_end - &_divider_tiles_start), 96 * 256u, 55, 1);
+    err = tileset_load_lz77(ctx, &_divider_tiles_start,
+        (uint16_t)(&_divider_tiles_end - &_divider_tiles_start), 96 * 256u, 55, 1, 1);
     if (err) return err;
     return GFX_SUCCESS;
 }
@@ -100,7 +100,7 @@ gfx_error title_assets_load(gfx_context* ctx)
     if (err)
         return err;
 
-    return tileset_load_lz77_4bit(ctx, &_title_tiles_start, tiles_size, 0, 0, 0);
+    return tileset_load_lz77(ctx, &_title_tiles_start, tiles_size, 0, 0, 0, 1);
 }
 
 void __assets__(void) __naked

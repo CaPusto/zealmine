@@ -136,25 +136,23 @@ gfx_error render_start_game(void)
     err = assets_load(&vctx);
     if (err)
         return err;
-    render_clear();
     gfx_enable_screen(1);
     return GFX_SUCCESS;
 }
 
 void render_clear(void)
 {
+    gfx_enable_screen(0);
     tilemap_scroll(LAYER0, 0, 0);
     tilemap_scroll(LAYER1, 0, 0);
     tilemap_fill(&vctx, LAYER0, TILE_BLANK, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
     tilemap_fill(&vctx, LAYER1, TILE_BLANK, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
+    gfx_enable_screen(1);
 }
 
 void render_new_game(void)
 {
-    tilemap_scroll(LAYER0, 0, 0);
-    tilemap_scroll(LAYER1, 0, 0);
-    tilemap_fill(&vctx, LAYER0, TILE_BLANK, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
-    tilemap_fill(&vctx, LAYER1, TILE_BLANK, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
+    render_clear();
     render_field();
     render_hud();
     /* Background pictures, below the board's layer so nothing can cover them:
