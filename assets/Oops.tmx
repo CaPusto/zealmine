@@ -3,7 +3,7 @@
  <tileset firstgid="1" source="board_tiles.tsx" />
  <layer id="1" name="Artwork" width="14" height="1">
   <data encoding="csv">
-101,102,103,104,105,106,107,108,109,110,111,112,113,114
+81,82,83,84,85,86,87,88,89,90,91,92,93,94
 </data>
  </layer>
 </map>

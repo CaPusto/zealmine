@@ -79,7 +79,7 @@ gfx_error render_init(void)
 
     gfx_enable_screen(0);
 
-    err = gfx_initialize(ZVB_CTRL_VID_MODE_GFX_320_8BIT, &vctx);
+    err = gfx_initialize(ZVB_CTRL_VID_MODE_GFX_320_4BIT, &vctx);
     if (err != 0)
         return err;
 
@@ -122,7 +122,7 @@ void render_title(void)
                  title_assets_tilemap_at(0));
 }
 
-void render_start_game(void)
+gfx_error render_start_game(void)
 {
     /* The two tilesets disagree about index 0: the title keeps a transparent
        blank there, the board keeps its number "1". Loading the new tiles while
@@ -130,9 +130,15 @@ void render_start_game(void)
        until the clear below, and the load is slow enough to see. Hide the
        screen for the swap instead. */
     gfx_enable_screen(0);
-    assets_load(&vctx);
+    gfx_error err = gfx_initialize(ZVB_CTRL_VID_MODE_GFX_320_8BIT, &vctx);
+    if (err)
+        return err;
+    err = assets_load(&vctx);
+    if (err)
+        return err;
     render_clear();
     gfx_enable_screen(1);
+    return GFX_SUCCESS;
 }
 
 void render_clear(void)

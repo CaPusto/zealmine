@@ -33,10 +33,9 @@
 #define TILEMAP_COLS 80
 #define TILEMAP_ROWS 40
 
-/* Tile indices in assets/board_tiles.gif. Preserve atlas ordering: number
-   tiles 0..7 are digits 1..8 in classic minesweeper colours. HUD digits
-   0..2 and 4..9 occupy 16..24; digit 3 reuses TILE_NUM3 through render.c's
-   DIGIT_TILES table. */
+/* Board atlas has 16 columns: colored digits 1..8 at 0..7, red HUD digits
+   0..9 at 16..25. Other game tiles occupy 8..9 and 48..56 around the controls
+   graphic. Constants must follow the authored layout. */
 #define TILE_NUM1 0
 #define TILE_NUM2 1
 #define TILE_NUM3 2
@@ -47,27 +46,27 @@
 #define TILE_NUM8 7
 #define TILE_EMPTY 8
 #define TILE_PANEL 9
-#define TILE_COLON 10
-#define TILE_COVERED 11
-#define TILE_FLAG 12
-#define TILE_MINE 13
-#define TILE_MINE_BLOWN 14
-#define TILE_MINE_WRONG 15
+#define TILE_COLON 48
+#define TILE_COVERED 49
+#define TILE_FLAG 50
+#define TILE_MINE 51
+#define TILE_MINE_BLOWN 52
+#define TILE_MINE_WRONG 53
 #define TILE_DIGIT0 16
 #define TILE_DIGIT1 17
 #define TILE_DIGIT2 18
-#define TILE_DIGIT3 TILE_NUM3
-#define TILE_DIGIT4 19
-#define TILE_DIGIT5 20
-#define TILE_DIGIT6 21
-#define TILE_DIGIT7 22
-#define TILE_DIGIT8 23
-#define TILE_DIGIT9 24
-#define TILE_CURSOR 25
-#define TILE_BLANK 26
-#define TILE_MINUS 27
+#define TILE_DIGIT3 19
+#define TILE_DIGIT4 20
+#define TILE_DIGIT5 21
+#define TILE_DIGIT6 22
+#define TILE_DIGIT7 23
+#define TILE_DIGIT8 24
+#define TILE_DIGIT9 25
+#define TILE_CURSOR 54
+#define TILE_BLANK 55
+#define TILE_MINUS 56
 
-#define TILE_COUNT 28
+#define TILE_COUNT 57
 
 /* tools/pack_title.py keeps one fully transparent tile at index 0 of the title
    tileset, so layer 1 can be cleared while the title owns the tiles. */

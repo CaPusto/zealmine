@@ -6,8 +6,8 @@ from pathlib import Path
 TS = 16
 
 
-def lz77_compress(data, window=256):
-    """Pack an entire tileset (concatenated 256-byte tiles) with LZ77.
+def lz77_compress(data, window=256, tile_size=TS * TS):
+    """Pack a tileset with LZ77; tile_size is 256 for 8bpp, 128 for 4bpp.
 
     Command byte, high bit first:
       0x00-0x7F  literal run of (b + 1) raw bytes
@@ -15,9 +15,8 @@ def lz77_compress(data, window=256):
       0xC0-0xFF  back-ref of (b & 0x3F) + 3 bytes at offset (next byte) + 1,
                  where the offset counts back into the last 256 bytes of output
 
-    Both RLE runs and back-refs may not cross the 256-byte tile boundary: the
-    decoder hands whole tiles to the video board every time the count of decoded
-    bytes reaches a multiple of TS * TS, so a command that straddled a boundary
+    Commands may not cross tile_size boundaries: the decoder uploads each
+    complete tile through the SDK, so a command that straddled a boundary
     would desynchronise the tiles. It keeps a 256-byte circular window so a
     back-ref may still reach across the previous tile boundary's last bytes.
     """
@@ -26,7 +25,7 @@ def lz77_compress(data, window=256):
     pos = 0
     while pos < n:
         rem = n - pos
-        rem_tile = (TS * TS) - (pos % (TS * TS))
+        rem_tile = tile_size - (pos % tile_size)
         run = 1
         while run < min(rem, 64, rem_tile) and data[pos + run] == data[pos]:
             run += 1
@@ -69,17 +68,22 @@ def lz77_compress(data, window=256):
 
 
 def main():
-    """Compress SDK raw 8bpp tiles without changing their order."""
+    """Concatenate SDK raw 8bpp tilesets in input order, then compress."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("-i", required=True, type=Path, help="raw 8bpp tileset")
+    parser.add_argument("-i", required=True, type=Path, nargs="+",
+                        help="raw 8bpp tilesets, in VRAM order")
     parser.add_argument("-o", required=True, type=Path, help="LZ77 output tileset")
     args = parser.parse_args()
     try:
-        data = args.i.read_bytes()
-        if not data:
-            parser.error("input tileset is empty")
-        if len(data) % (TS * TS):
-            parser.error("input must contain whole 256-byte tiles")
+        inputs = []
+        for path in args.i:
+            data = path.read_bytes()
+            if not data:
+                parser.error(f"{path}: input tileset is empty")
+            if len(data) % (TS * TS):
+                parser.error(f"{path}: input must contain whole 256-byte tiles")
+            inputs.append(data)
+        data = b"".join(inputs)
         if len(data) > 256 * TS * TS:
             parser.error("input exceeds 256 tiles")
         packed = lz77_compress(data)

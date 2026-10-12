@@ -19,19 +19,19 @@ def pack_title(source, output):
     tiles = source.with_suffix(".zts").read_bytes()
     palette = source.with_suffix(".ztp").read_bytes()
     tilemap = source.with_suffix(".ztm").read_bytes()
-    tile_size = TS * TS
+    tile_size = TS * TS // 2
     count = len(tiles) // tile_size
     if len(tiles) % tile_size or not 1 <= count <= MAX_ART_TILES:
-        raise ValueError("title must contain 1..%d whole raw 8bpp tiles"
+        raise ValueError("title must contain 1..%d whole raw 4bpp tiles"
                          % MAX_ART_TILES)
-    if len(palette) != 512:
-        raise ValueError("title must have a 256-entry RGB565 palette")
+    if len(palette) != 32:
+        raise ValueError("title must have a 16-entry RGB565 palette")
     if len(tilemap) != TITLE_CELLS or max(tilemap) >= count:
         raise ValueError("title must have a valid 20x15 tilemap")
-    if 0 in tiles:
+    if any(byte >> 4 == 0 or byte & 0x0F == 0 for byte in tiles):
         raise ValueError("title artwork must reserve palette index 0 for transparency")
 
-    packed = lz77_compress(bytes(tile_size) + tiles)
+    packed = lz77_compress(bytes(tile_size) + tiles, tile_size=tile_size)
     if len(packed) > 0xFFFF:
         raise ValueError("compressed title exceeds the 16-bit loader size")
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -1,15 +1,15 @@
 {
-  "A_SAPPER_MAKES_ONLY_ONE_MISTAKE.ztm": "bbe2417873027d3e9efed445998b589ef21ddbbe258ac7af0b8a01043bde461f",
-  "Congratulations.ztm": "b5bcaeb856daccd3a0b008a352d07dc744c9a1592375f9ff0780578e525e21f4",
-  "Oops.ztm": "27ad2ffd73179a83eaf2c858f92c8a3e44b79aed61ab53d0723e4663193d9c9e",
-  "retro_divider_320x16.ztm": "b5af1bb92b65018fe7716138ff62ebb6b46ef332cc1ddcf205561ff74d6a697b",
-  "soldier_congratulations.ztm": "3c4d10db7f6a2fa25e45179f10ae73cd62f5a89156a5881a2e1fa4469b028f23",
-  "soldier_defeat.ztm": "75d78b1a09afa3b10e1249b08efc5c3554f761960cba0d023615959989938bd8",
-  "soldier_neutral.ztm": "8a66d73af738e2e46414009d7c3fa5950e812cebcc82f821f8a1f4c2aa482e02",
+  "A_SAPPER_MAKES_ONLY_ONE_MISTAKE.ztm": "6db41529d567f268b601f06b3dbc6efc48cd808c474d8300ef7f95c44139e7cf",
+  "Congratulations.ztm": "5af96db9928bb07f581e67e7a3b1d434f2affa19a0c722d335c595258f3d513e",
+  "Oops.ztm": "3c543cd92c1866cf85b0eb12f49c33a13f0dc00fdf6b04cc7756e497933625d2",
+  "retro_divider_320x16.ztm": "2167d14d7024cfe25d4e471264b4f179f522869a35bd63cffbe1645b774ad2f7",
+  "soldier_congratulations.ztm": "08339ebaf4b2d00144648bc5e46c0181f3f2d77c5b5fdc884b5d847b184859df",
+  "soldier_defeat.ztm": "3791de4c2e0fd0c2a6a8f47bd75e4d850a50e78d77e1742cc4d0905f017528d5",
+  "soldier_neutral.ztm": "f2786ee99040ba393f99cf6c09a98815dd18520008e0de5c3b90a83aa8d5bcf6",
   "tiles.ztp": "06aaf6d838a4fce10f004e6ebf360f7c42526e2acc4d3e6074c34d1f71fb9048",
-  "tiles.zts": "fd412b36bf989879d8f05b707b7b0f04363b3573037ce22b1d1ea84daa9736a8",
+  "tiles.zts": "3c7f926c28e8a0d9124d633f7bd43744130b20cff0fd135289f17fc120f8c3f4",
   "title.ztm": "19fd2a64bc85b57a106f7295fed98df750b3fc1ded4553cf16f7a83ebd2eabb9",
-  "title.ztp": "e0352918224e093d6180c1a4a641662d5cf63697c1642bbce2843843b9d2158a",
-  "title.zts": "60b34856c90b651422d1aceb2e7ceb586e15179196c12f6871c10f34fcbd61d9",
-  "use_keys_8bit.ztm": "a04e531aeadaf2dd1e035b37d6ed8181001ac688c6d835c33e3efe4246a8f27d"
+  "title.ztp": "505d6003973755b281b1bb35da2386b5d890062fad50fb6256e2a1fcf59ee5bd",
+  "title.zts": "d71d17eec0e3d351381da1d2f6cd54840adc2ff6899facbe6cb8cebb942890b7",
+  "use_keys_8bit.ztm": "f939f6097fbd377e53c3aa626291cc040c24642105b9722ce7890780dd6b57a8"
 }

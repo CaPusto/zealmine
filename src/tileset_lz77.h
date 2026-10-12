@@ -10,4 +10,8 @@
 gfx_error tileset_load_lz77(gfx_context* ctx, const uint8_t* data, uint16_t size,
                             uint16_t from, uint8_t pal_offset, uint8_t opacity);
 
+/* Decode packed 4bpp tiles directly into native 4bpp VRAM. */
+gfx_error tileset_load_lz77_4bit(gfx_context* ctx, const uint8_t* data, uint16_t size,
+                              uint16_t from, uint8_t pal_offset, uint8_t opacity);
+
 #endif

@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" orientation="orthogonal" renderorder="right-down" width="6" height="8" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
- <tileset firstgid="1" source="board_tiles.tsx" />
+ <tileset firstgid="103" source="soldier_tiles.tsx" />
  <layer id="1" name="Artwork" width="6" height="8">
   <data encoding="csv">
-141,142,143,144,145,146,
-161,162,163,164,165,166,
-181,182,183,184,185,186,
-201,202,203,204,205,206,
-221,222,223,224,225,226,
-241,242,243,244,245,246,
-261,262,263,264,265,266,
-281,282,283,284,285,286
+103,104,105,106,107,108,
+121,122,123,124,125,126,
+139,140,141,142,143,144,
+157,158,159,160,161,162,
+175,176,177,178,179,180,
+193,194,195,196,197,198,
+211,212,213,214,215,216,
+229,230,231,232,233,234
 </data>
  </layer>
 </map>

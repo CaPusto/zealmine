@@ -58,11 +58,19 @@ set(ASSETS_DIR ${CMAKE_BINARY_DIR}/assets)
 set(TILESET_CODEC ${CMAKE_CURRENT_LIST_DIR}/tools/tileset_lz77.py)
 set(BOARD_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/board_tiles.gif)
 set(BOARD_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/board_tiles.tsx)
+set(DIVIDER_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/divider_tiles.gif)
+set(DIVIDER_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/divider_tiles.tsx)
+set(SOLDIER_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/soldier_tiles.gif)
+set(SOLDIER_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/soldier_tiles.tsx)
 
-# The authored atlas owns tile indices shared by gameplay and picture maps.
-gif2zeal(${target_name} BIT 8 COLORS 256 FILES ${BOARD_ATLAS})
+# Authored atlases concatenate in board, divider, soldier order.
+gif2zeal(${target_name} BIT 8 COLORS 256 FILES ${BOARD_ATLAS} ${DIVIDER_ATLAS} ${SOLDIER_ATLAS})
 set(BOARD_RAW ${ASSETS_DIR}/board_tiles.zts)
 set(BOARD_PALETTE ${ASSETS_DIR}/board_tiles.ztp)
+set(DIVIDER_RAW ${ASSETS_DIR}/divider_tiles.zts)
+set(DIVIDER_PALETTE ${ASSETS_DIR}/divider_tiles.ztp)
+set(SOLDIER_RAW ${ASSETS_DIR}/soldier_tiles.zts)
+set(SOLDIER_PALETTE ${ASSETS_DIR}/soldier_tiles.ztp)
 
 set(BOARD_IMAGES use_keys_8bit A_SAPPER_MAKES_ONLY_ONE_MISTAKE retro_divider_320x16 soldier_neutral Congratulations Oops soldier_congratulations soldier_defeat)
 set(BOARD_IMAGE_ZTMS)
@@ -72,16 +80,20 @@ foreach(image IN LISTS BOARD_IMAGES)
     tiled2zeal(${target_name} LAYER 1 FILES ${tmx})
     # SDK conversion depends on the TMX; also track its authored tileset.
     add_custom_command(OUTPUT ${ztm} APPEND
-        DEPENDS ${BOARD_TILESET} ${BOARD_ATLAS})
+        DEPENDS ${BOARD_TILESET} ${BOARD_ATLAS} ${DIVIDER_TILESET} ${DIVIDER_ATLAS}
+                ${SOLDIER_TILESET} ${SOLDIER_ATLAS})
     list(APPEND BOARD_IMAGE_ZTMS ${ztm})
 endforeach()
 
 add_custom_command(
     OUTPUT ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp
+    COMMAND ${CMAKE_COMMAND} -E compare_files ${BOARD_PALETTE} ${DIVIDER_PALETTE}
+    COMMAND ${CMAKE_COMMAND} -E compare_files ${BOARD_PALETTE} ${SOLDIER_PALETTE}
     COMMAND ${Python3_EXECUTABLE} ${TILESET_CODEC}
-            -i ${BOARD_RAW} -o ${ASSETS_DIR}/tiles.zts
+            -i ${BOARD_RAW} ${DIVIDER_RAW} ${SOLDIER_RAW} -o ${ASSETS_DIR}/tiles.zts
     COMMAND ${CMAKE_COMMAND} -E copy ${BOARD_PALETTE} ${ASSETS_DIR}/tiles.ztp
-    DEPENDS ${BOARD_RAW} ${BOARD_PALETTE} ${TILESET_CODEC}
+    DEPENDS ${BOARD_RAW} ${BOARD_PALETTE} ${DIVIDER_RAW} ${DIVIDER_PALETTE}
+            ${SOLDIER_RAW} ${SOLDIER_PALETTE} ${TILESET_CODEC}
     COMMENT "Packing SDK board tiles"
     VERBATIM
 )
@@ -89,7 +101,7 @@ add_custom_command(
 # The source title already fits VRAM and reserves palette index 0. SDK
 # conversion is lossless; only blank-tile indexing and LZ77 packing remain.
 set(TITLE_GIF ${CMAKE_CURRENT_LIST_DIR}/assets/zeal_mine_title.gif)
-gif2zeal(${target_name} BIT 8 COLORS 256 UNIQUE TILEMAP FILES ${TITLE_GIF})
+gif2zeal(${target_name} BIT 4 COLORS 16 UNIQUE TILEMAP FILES ${TITLE_GIF})
 set(TITLE_RAW ${ASSETS_DIR}/zeal_mine_title)
 set(TITLE_PACKER ${CMAKE_CURRENT_LIST_DIR}/tools/pack_title.py)
 

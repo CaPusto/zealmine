@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" orientation="orthogonal" renderorder="right-down" width="20" height="1" tilewidth="16" tileheight="16" infinite="0" nextlayerid="2" nextobjectid="1">
- <tileset firstgid="1" source="board_tiles.tsx" />
+ <tileset firstgid="97" source="divider_tiles.tsx" />
  <layer id="1" name="Artwork" width="20" height="1">
   <data encoding="csv">
-41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60
+97,98,98,98,98,98,98,98,98,98,98,98,98,98,99,100,101,98,98,102
 </data>
  </layer>
 </map>

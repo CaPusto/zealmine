@@ -21,7 +21,7 @@ OUT = os.path.join("/tmp/opencode", "tiles_preview.png")
 
 TS = 16
 COLS = 16
-USED_TILES = 28
+USED_TILES = 57
 TILEMAP_COLS = 80
 
 
@@ -77,11 +77,11 @@ def main():
         zero = any(
             pixels[t * TS * TS + y * TS + x] == 0 for y in range(TS) for x in range(TS)
         )
-        if zero and t not in (25, 26):
+        if zero and t not in (54, 55):
             bad.append(t)
     if bad:
         sys.exit("tiles %s use the transparent index outside the overlay tiles" % bad)
-    print("transparent   : only tiles 25 (cursor) and 26 (blank)")
+    print("transparent   : only tiles 54 (cursor) and 55 (blank)")
     print("wrote %s" % OUT)
 
 

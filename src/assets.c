@@ -97,7 +97,7 @@ gfx_error title_assets_load(gfx_context* ctx)
     if (err)
         return err;
 
-    return tileset_load_lz77(ctx, &_title_tiles_start, tiles_size, 0, 0, 0);
+    return tileset_load_lz77_4bit(ctx, &_title_tiles_start, tiles_size, 0, 0, 0);
 }
 
 void __assets__(void) __naked

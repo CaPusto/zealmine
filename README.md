@@ -108,7 +108,7 @@ python tools/preview_title.py -a build/assets
 ## Layout
 
 ```
-assets/    board atlas, Tiled layouts, title GIF
+assets/    board, divider, soldier atlases; Tiled layouts; title GIF
 src/       game, renderer, field logic, LZ77 tileset decoder
 tools/     asset packing, checks, emulator driver (run_emu.py)
 tests/     host C and asset regression tests
