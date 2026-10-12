@@ -1,6 +1,6 @@
 # Zealmine
 
-This is remake Minesweeper for the [Zeal 8-bit OS](https://github.com/Zeal8bit/Zeal-8-bit-OS),
+This is a remake of Minesweeper for the [Zeal 8-bit OS](https://github.com/Zeal8bit/Zeal-8-bit-OS),
 written in C for the Z80. It ships as a single keyboard-driven init program
 that boots straight from the OS disk and stays inside the kernel's 48 KiB init
 RAM limit.
@@ -15,8 +15,8 @@ RAM limit.
 
 ## Features
 
-- Classic minesweeper: reveal a cell, flag a mine, chord (reveal neighbours)
-  with a press on an already-open cell.
+- Classic minesweeper: reveal a cell, flag a mine, chord (reveal neighbors)
+  by pressing an already-open cell
 - Fixed 14x12 board with 30 mines.
 - HUD row: mines left counter, sapper banner, and an MM:SS timer.
 - Keyboard and gamepad controls (arrows/WASD, Z/Space, X, R, Q).
@@ -59,7 +59,7 @@ the source GIFs in `assets/` at build time by `tools/`.
 
 ## Running
 
-Under the reference emulator, with the OS image that carries the disk:
+In the reference emulator, with the OS image that carries the disk:
 
 ```sh
 zeal-native --rom path/to/zos/os_with_romdisk.img -u bin/zealmine.bin
