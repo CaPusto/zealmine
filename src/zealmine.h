@@ -63,14 +63,12 @@
 #define TILE_DIGIT8 24
 #define TILE_DIGIT9 25
 #define TILE_CURSOR 54
-#define TILE_BLANK 55
+/* Reserve the final tile slot for an SDK-generated transparent blank in both
+   title and gameplay modes. Artwork must stay below TILE_BLANK. */
+#define TILE_BLANK 255
 #define TILE_MINUS 56
 
 #define TILE_COUNT 57
-
-/* tools/pack_title.py keeps one fully transparent tile at index 0 of the title
-   tileset, so layer 1 can be cleared while the title owns the tiles. */
-#define TILE_TITLE_BLANK 0
 
 /* The HUD holds the mine count on the left three tiles and the clock on the
    right five, as "MM:SS": two digits, the colon, two more. Everything between

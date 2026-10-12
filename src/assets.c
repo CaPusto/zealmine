@@ -7,6 +7,7 @@
 #include <zvb_gfx.h>
 
 #include "assets.h"
+#include "zealmine.h"
 #include "tileset_loader.h"
 
 gfx_error assets_load(gfx_context* ctx)
@@ -32,7 +33,7 @@ gfx_error assets_load(gfx_context* ctx)
     err = tileset_load_lz77(ctx, &_divider_tiles_start,
         (uint16_t)(&_divider_tiles_end - &_divider_tiles_start), 96 * 256u, 55, 1, 1);
     if (err) return err;
-    return GFX_SUCCESS;
+    return gfx_tileset_add_color_tile(ctx, TILE_BLANK, 0);
 }
 
 uint16_t title_assets_palette_size(void)
@@ -100,7 +101,10 @@ gfx_error title_assets_load(gfx_context* ctx)
     if (err)
         return err;
 
-    return tileset_load_lz77(ctx, &_title_tiles_start, tiles_size, 0, 0, 0, 1);
+    err = tileset_load_lz77(ctx, &_title_tiles_start, tiles_size, 0, 0, 0, 1);
+    if (err)
+        return err;
+    return gfx_tileset_add_color_tile(ctx, TILE_BLANK, 0);
 }
 
 void __assets__(void) __naked

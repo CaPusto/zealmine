@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pack SDK title assets into the game's blank-tile-prefixed LZ77 format.
+"""Pack SDK title assets into the game's LZ77 format.
 
 SDK gif2zeal owns palette conversion, exact tile deduplication and tilemap
 creation. Artwork must already fit; this step never modifies image pixels.
@@ -10,8 +10,8 @@ from pathlib import Path
 
 from tileset_lz77 import TS, lz77_compress
 
-# Preserve one transparent blank tile at index 0 and one spare VRAM slot.
-MAX_ART_TILES = 254
+# Reserve tile 255 for the runtime-generated transparent blank.
+MAX_ART_TILES = 255
 TITLE_CELLS = 20 * 15
 
 
@@ -31,14 +31,14 @@ def pack_title(source, output):
     if any(byte >> 4 == 0 or byte & 0x0F == 0 for byte in tiles):
         raise ValueError("title artwork must reserve palette index 0 for transparency")
 
-    packed = lz77_compress(bytes(tile_size) + tiles)
+    packed = lz77_compress(tiles)
     if len(packed) > 0xFFFF:
         raise ValueError("compressed title exceeds the 16-bit loader size")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.with_suffix(".zts").write_bytes(packed)
     output.with_suffix(".ztp").write_bytes(palette)
-    output.with_suffix(".ztm").write_bytes(bytes(index + 1 for index in tilemap))
-    print("%d artwork tiles + blank, %d compressed bytes, %d map cells"
+    output.with_suffix(".ztm").write_bytes(tilemap)
+    print("%d artwork tiles, %d compressed bytes, %d map cells"
           % (count, len(packed), len(tilemap)))
 
 

@@ -102,7 +102,7 @@ foreach(atlas board divider soldier)
 endforeach()
 
 # The source title already fits VRAM and reserves palette index 0. SDK
-# conversion is lossless; only blank-tile indexing and LZ77 packing remain.
+# conversion is lossless; only validation and LZ77 packing remain.
 set(TITLE_GIF ${CMAKE_CURRENT_LIST_DIR}/assets/zeal_mine_title.gif)
 gif2zeal(${target_name} BIT 4 COLORS 16 UNIQUE TILEMAP FILES ${TITLE_GIF})
 set(TITLE_RAW ${ASSETS_DIR}/zeal_mine_title)

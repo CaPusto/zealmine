@@ -121,6 +121,11 @@ class SourceAtlasTests(unittest.TestCase):
         constants = {name: int(index) for name, index in re.findall(
             r"#define (TILE_\w+)\s+(\d+)", (ROOT / "src" / "zealmine.h").read_text())}
         for name, expected_hash in expected.items():
+            if name == "TILE_BLANK":
+                # Generated at runtime, outside the authored atlas.
+                self.assertEqual(constants[name], 255)
+                self.assertEqual(digest(colored(bytes(256))), expected_hash, name)
+                continue
             index = constants[name]
             self.assertEqual(digest(colored(raw[index * 256:(index + 1) * 256])), expected_hash, name)
         for digit in range(10):
@@ -133,8 +138,8 @@ class SourceAtlasTests(unittest.TestCase):
                 palette = image.getpalette()
                 self.assertEqual(len(palette), (16 if name != "soldier_tiles" else 64) * 3)
                 self.assertLess(max(image.tobytes()), PALETTE_COUNTS[name])
-        blank, cursor = constants["TILE_BLANK"], constants["TILE_CURSOR"]
-        self.assertEqual(raw[blank * 256:(blank + 1) * 256], bytes(256))
+        cursor = constants["TILE_CURSOR"]
+        self.assertLess(AUTHOR_TILE_COUNT, constants["TILE_BLANK"] + 1)
         self.assertIn(0, raw[cursor * 256:(cursor + 1) * 256])
         for name in expected:
             if name not in ("TILE_BLANK", "TILE_CURSOR"):

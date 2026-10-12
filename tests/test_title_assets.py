@@ -54,21 +54,21 @@ class TitleTests(unittest.TestCase):
             tiles = [image.crop((x * 16, y * 16, (x + 1) * 16, (y + 1) * 16)).tobytes()
                      for y in range(15) for x in range(20)]
         unique = list(dict.fromkeys(tiles))
-        pixels = bytes(256) + b"".join(unique)
-        self.assertEqual(hashlib.sha256(pixels).hexdigest(), TITLE_VRAM_SHA256)
+        pixels = b"".join(unique)
+        self.assertEqual(hashlib.sha256(bytes(256) + pixels).hexdigest(), TITLE_VRAM_SHA256)
         raw = bytes((pixels[i] << 4) | pixels[i + 1] for i in range(0, len(pixels), 2))
         tilemap = bytes(unique.index(tile) for tile in tiles)
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             source, output = directory / "sdk", directory / "title"
-            source.with_suffix(".zts").write_bytes(raw[128:])
+            source.with_suffix(".zts").write_bytes(raw)
             # Palette colors do not affect packing; valid-sized fixture suffices.
             source.with_suffix(".ztp").write_bytes(bytes(32))
             source.with_suffix(".ztm").write_bytes(tilemap)
             pack_title(source, output)
             compressed = output.with_suffix(".zts").read_bytes()
             self.assertEqual(lz77_decompress(compressed), raw)
-            self.assertEqual(output.with_suffix(".ztm").read_bytes(), bytes(i + 1 for i in tilemap))
+            self.assertEqual(output.with_suffix(".ztm").read_bytes(), tilemap)
             self.assertEqual(output.with_suffix(".ztp").read_bytes(), bytes(32))
             harness = directory / "loader"
             subprocess.run(["cc", "-std=c99", "-Wall", "-Wextra", "-Werror",
@@ -78,8 +78,8 @@ class TitleTests(unittest.TestCase):
                             str(ROOT / "src" / "tileset_loader.c"), "-o", str(harness)], check=True)
             expected = directory / "pixels.raw"
             expected.write_bytes(raw)
-            # Odd tile count tests the final half-window; packed native VRAM pages
-            # and overlapping/cross-tile back-references use real title data.
+            # Packed native VRAM pages and overlapping/cross-tile references
+            # use real title data.
             subprocess.run([str(harness), "4", str(output.with_suffix(".zts")), str(expected)], check=True)
             board = directory / "board.zts"
             board.write_bytes(lz77_compress(pixels))
@@ -119,6 +119,21 @@ class TitleTests(unittest.TestCase):
             stream.write_bytes(lz77_compress(packed))
             expected.write_bytes(bytes(index + 14 if index else 0 for index in raw))
             subprocess.run([str(harness), "expand", str(stream), str(expected), "14", "1"], check=True)
+
+    def test_reserve_final_tile_slot(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source, output = Path(directory) / "sdk", Path(directory) / "title"
+            source.with_suffix(".ztp").write_bytes(bytes(32))
+            tilemap = bytes([254]) * 300
+            source.with_suffix(".ztm").write_bytes(tilemap)
+            raw = bytes([0x11]) * (255 * 128)
+            source.with_suffix(".zts").write_bytes(raw)
+            pack_title(source, output)
+            self.assertEqual(lz77_decompress(output.with_suffix(".zts").read_bytes()), raw)
+            self.assertEqual(output.with_suffix(".ztm").read_bytes(), tilemap)
+            source.with_suffix(".zts").write_bytes(raw + bytes([0x11]) * 128)
+            with self.assertRaisesRegex(ValueError, "whole raw 4bpp tiles"):
+                pack_title(source, output)
 
     def test_reject_transparent_nibbles_and_invalid_sizes(self):
         with tempfile.TemporaryDirectory() as directory:

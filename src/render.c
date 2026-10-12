@@ -114,9 +114,8 @@ void render_title(void)
     tilemap_scroll(LAYER0, 0, 0);
     tilemap_scroll(LAYER1, 0, 0);
 
-    /* The title has no tile of its own for the HUD layer, so it is cleared with
-       the blank tile tools/pack_title.py keeps at index 0 for this purpose. */
-    tilemap_fill(&vctx, LAYER1, TILE_TITLE_BLANK, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
+    /* In 4bpp mode layer 1 holds attributes: palette bank 0, no tile flags. */
+    tilemap_fill(&vctx, LAYER1, 0, 0, 0, TILEMAP_COLS, TILEMAP_ROWS);
 
     render_image(LAYER0, 0, 0, SCREEN_TILES_X, SCREEN_TILES_Y,
                  title_assets_tilemap_at(0));
@@ -124,11 +123,7 @@ void render_title(void)
 
 gfx_error render_start_game(void)
 {
-    /* The two tilesets disagree about index 0: the title keeps a transparent
-       blank there, the board keeps its number "1". Loading the new tiles while
-       the title is still drawn therefore covers the whole screen with "1"s
-       until the clear below, and the load is slow enough to see. Hide the
-       screen for the swap instead. */
+    /* Hide the screen while changing video mode and replacing artwork. */
     gfx_enable_screen(0);
     gfx_error err = gfx_initialize(ZVB_CTRL_VID_MODE_GFX_320_8BIT, &vctx);
     if (err)
