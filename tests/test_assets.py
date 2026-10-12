@@ -1,8 +1,7 @@
 """Run after `zde cmake`: python3 -m unittest discover -s tests -p test_assets.py.
 
-Picture hashes preserve artwork through atlas rearrangement. Runtime tests
-require a successful build and are skipped while the authored atlas exceeds
-the 256-tile hardware limit. Source checks still run in that state.
+Picture and semantic tile hashes preserve RGB565 colors and transparency,
+independent of palette indices. Runtime tests require a successful build.
 """
 
 import hashlib
@@ -22,6 +21,7 @@ from PIL import Image
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from tileset_lz77 import lz77_decompress
+from dump_tiles import load_gameplay_assets
 
 OUTPUT = ROOT / "build" / "assets"
 MAPS = {
@@ -69,8 +69,32 @@ def atlas_tiles(name):
         )
 
 
+PALETTE_COUNTS = {"soldier_tiles": 41, "board_tiles": 14, "divider_tiles": 10}
+
+
+def authored_palette():
+    palette = bytearray()
+    for name, count in PALETTE_COUNTS.items():
+        with Image.open(ROOT / "assets" / f"{name}.gif") as image:
+            rgb = image.getpalette()[:count * 3]
+        palette.extend(b"".join(struct.pack("<H", ((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3))
+                                for r, g, b in zip(rgb[::3], rgb[1::3], rgb[2::3])))
+    return bytes(palette)
+
+
+def palette_offset(name):
+    return sum(PALETTE_COUNTS[n] for n in list(PALETTE_COUNTS)[:list(PALETTE_COUNTS).index(name)])
+
+
 def authored_tiles():
-    return b"".join(atlas_tiles(name) for name in ATLASES)
+    return b"".join(bytes(index + palette_offset(name) if index else 0
+                          for index in atlas_tiles(name)) for name in ATLASES)
+
+
+def colored(raw):
+    palette = authored_palette()
+    return b"".join(bytes([index != 0]) + palette[index * 2:index * 2 + 2] for index in raw)
+
 
 
 AUTHOR_TILE_COUNT = len(authored_tiles()) // 256
@@ -98,21 +122,17 @@ class SourceAtlasTests(unittest.TestCase):
             r"#define (TILE_\w+)\s+(\d+)", (ROOT / "src" / "zealmine.h").read_text())}
         for name, expected_hash in expected.items():
             index = constants[name]
-            self.assertEqual(digest(raw[index * 256:(index + 1) * 256]), expected_hash, name)
+            self.assertEqual(digest(colored(raw[index * 256:(index + 1) * 256])), expected_hash, name)
         for digit in range(10):
             self.assertEqual(constants[f"TILE_DIGIT{digit}"], 16 + digit)
-        hashes = json.loads((ROOT / "tests" / "assets_sha256.json").read_text())
         for name, (columns, rows, _) in ATLASES.items():
             with Image.open(ROOT / "assets" / f"{name}.gif") as image:
                 self.assertEqual(image.mode, "P")
                 self.assertEqual(image.size, (columns * 16, rows * 16))
                 self.assertEqual(image.info.get("transparency"), 0)
                 palette = image.getpalette()
-                self.assertEqual(len(palette), 768)
-                rgb565 = b"".join(struct.pack("<H", ((r >> 3) << 11)
-                                            | ((g >> 2) << 5) | (b >> 3))
-                                  for r, g, b in zip(palette[::3], palette[1::3], palette[2::3]))
-                self.assertEqual(digest(rgb565), hashes["tiles.ztp"])
+                self.assertEqual(len(palette), (16 if name != "soldier_tiles" else 64) * 3)
+                self.assertLess(max(image.tobytes()), PALETTE_COUNTS[name])
         blank, cursor = constants["TILE_BLANK"], constants["TILE_CURSOR"]
         self.assertEqual(raw[blank * 256:(blank + 1) * 256], bytes(256))
         self.assertIn(0, raw[cursor * 256:(cursor + 1) * 256])
@@ -180,13 +200,14 @@ class SourceAtlasTests(unittest.TestCase):
                 root = ET.parse(ROOT / "assets" / f"{name}.tmx").getroot()
                 cells = [int(n) - 1 for n in root.find("layer/data").text.split(",")]
                 pixels = reconstruct(raw, cells, MAPS[name][0])
-                self.assertEqual(digest(pixels), expected)
+                self.assertEqual(digest(colored(pixels)), expected)
                 if name == "retro_divider_320x16":
                     continue
                 x, y, w, h = RECTANGLES[name]
                 with Image.open(ROOT / "assets" / f"{atlas_for(name)}.gif") as image:
-                    self.assertEqual(image.crop((x * 16, y * 16,
-                                                 (x + w) * 16, (y + h) * 16)).tobytes(), pixels)
+                    offset = palette_offset(atlas_for(name))
+                    local = image.crop((x * 16, y * 16, (x + w) * 16, (y + h) * 16)).tobytes()
+                    self.assertEqual(bytes(i + offset if i else 0 for i in local), pixels)
 
 
 @unittest.skipIf(AUTHOR_TILE_COUNT > 256,
@@ -194,15 +215,21 @@ class SourceAtlasTests(unittest.TestCase):
 class BuiltAssetTests(unittest.TestCase):
     def test_final_asset_bytes(self):
         hashes = json.loads((ROOT / "tests" / "assets_sha256.json").read_text())
-        self.assertEqual(len(hashes), 13)
+        self.assertEqual(len(hashes), 17)
         for name in hashes:
             with self.subTest(asset=name):
                 self.assertEqual(digest((OUTPUT / name).read_bytes()), hashes[name])
 
     def test_sdk_tiles_and_maps(self):
         raw = authored_tiles()
-        self.assertEqual(raw, b"".join((OUTPUT / f"{name}.zts").read_bytes() for name in ATLASES))
-        self.assertEqual(raw, lz77_decompress((OUTPUT / "tiles.zts").read_bytes()))
+        pixels, palette = load_gameplay_assets(OUTPUT)
+        self.assertEqual(raw, pixels)
+        self.assertEqual(authored_palette(), palette)
+        for name in ATLASES:
+            local = atlas_tiles(name)
+            if name != "soldier_tiles":
+                local = bytes((local[i] << 4) | local[i + 1] for i in range(0, len(local), 2))
+            self.assertEqual(local, (OUTPUT / f"{name}.zts").read_bytes())
         for name in MAPS:
             root = ET.parse(ROOT / "assets" / f"{name}.tmx").getroot()
             cells = bytes(int(n) - 1 for n in root.find("layer/data").text.split(","))
@@ -217,7 +244,7 @@ class BuiltAssetTests(unittest.TestCase):
                                      "-i", str(source), "-o", str(output)],
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertEqual(output.read_bytes(), (OUTPUT / "tiles.zts").read_bytes())
+            self.assertEqual(lz77_decompress(output.read_bytes()), authored_tiles())
 
 
 class CompressionValidationTests(unittest.TestCase):

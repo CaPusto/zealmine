@@ -70,6 +70,32 @@ class TitleTests(unittest.TestCase):
             output.with_suffix(".zts").write_bytes(lz77_compress(packed, tile_size=128))
             subprocess.run([str(harness), "4", str(output.with_suffix(".zts")), str(expected)], check=True)
 
+    def test_gameplay_expansion_and_palette_offsets(self):
+        # Real SDK output exercises all three streams and transparent zero.
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            harness = directory / "loader"
+            subprocess.run(["cc", "-std=c99", "-Wall", "-Wextra", "-Werror",
+                            "-I" + str(ROOT / "tests" / "stubs"), "-I" + str(ROOT / "src"),
+                            str(ROOT / "tests" / "test_tileset_lz77.c"),
+                            str(ROOT / "src" / "tileset_lz77.c"), "-o", str(harness)], check=True)
+            for name, offset, mode in [("board", 41, "expand"), ("divider", 55, "expand"),
+                                       ("soldier", 0, "8")]:
+                stream = ROOT / "build" / "assets" / f"{name}.zts"
+                raw = lz77_decompress(stream.read_bytes())
+                if mode == "expand":
+                    raw = bytes(n for byte in raw for n in (byte >> 4, byte & 15))
+                expected = directory / "expected"
+                expected.write_bytes(bytes(index + offset if index else 0 for index in raw))
+                subprocess.run([str(harness), mode, str(stream), str(expected), str(offset), "1"], check=True)
+            # Odd tile count with zero pixels and nonzero offset tests half-window.
+            raw = bytes(random.Random(7).choices(range(16), k=3 * 256))
+            packed = bytes((raw[i] << 4) | raw[i + 1] for i in range(0, len(raw), 2))
+            stream = directory / "odd.zts"
+            stream.write_bytes(lz77_compress(packed, tile_size=128))
+            expected.write_bytes(bytes(index + 14 if index else 0 for index in raw))
+            subprocess.run([str(harness), "expand", str(stream), str(expected), "14", "1"], check=True)
+
     def test_reject_transparent_nibbles_and_invalid_sizes(self):
         with tempfile.TemporaryDirectory() as directory:
             source, output = Path(directory) / "sdk", Path(directory) / "title"

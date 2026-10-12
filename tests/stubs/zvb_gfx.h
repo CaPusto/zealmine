@@ -6,4 +6,5 @@ typedef int gfx_error;
 #define GFX_SUCCESS 0
 #define GFX_INVALID_ARG 1
 gfx_error gfx_tileset_load_none(gfx_context*, uint8_t*, uint16_t, uint16_t, uint8_t, uint8_t);
+gfx_error gfx_tileset_load_4bit(gfx_context*, uint8_t*, uint16_t, uint16_t, uint8_t, uint8_t);
 #endif

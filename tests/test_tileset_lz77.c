@@ -14,9 +14,23 @@ gfx_error gfx_tileset_load_none(gfx_context* ctx, uint8_t* tiles, uint16_t size,
 {
     unsigned tile_size = ctx->bpp == 4 ? 128 : 256;
     assert(size == tile_size && from == uploads * tile_size);
-    assert(offset == 0 && opacity == 0);
+
     if (upload_error) return upload_error;
-    memcpy(vram + from, tiles, size);
+    for (unsigned i = 0; i < size; i++)
+        vram[from + i] = (opacity && tiles[i] == 0) ? 0 : tiles[i] + offset;
+    uploads++;
+    return GFX_SUCCESS;
+}
+
+gfx_error gfx_tileset_load_4bit(gfx_context* ctx, uint8_t* tiles, uint16_t size,
+                               uint16_t from, uint8_t offset, uint8_t opacity)
+{
+    assert(ctx->bpp == 8 && size == 128 && from == uploads * 256);
+    if (upload_error) return upload_error;
+    for (unsigned i = 0; i < size * 2u; i++) {
+        uint8_t index = (i & 1) ? tiles[i / 2] & 15 : tiles[i / 2] >> 4;
+        vram[from + i] = (opacity && index == 0) ? 0 : index + offset;
+    }
     uploads++;
     return GFX_SUCCESS;
 }
@@ -33,21 +47,24 @@ static size_t read_file(const char* path, uint8_t* bytes, size_t capacity)
 
 int main(int argc, char** argv)
 {
-    assert(argc == 4);
+    assert(argc == 4 || argc == 6);
+    uint8_t offset = argc == 6 ? (uint8_t)atoi(argv[4]) : 0;
+    uint8_t opacity = argc == 6 ? (uint8_t)atoi(argv[5]) : 0;
     static uint8_t packed[65536], expected[65536];
     size_t size = read_file(argv[2], packed, sizeof(packed));
     size_t pixels = read_file(argv[3], expected, sizeof(expected));
-    gfx_context ctx = {(uint8_t)atoi(argv[1])};
+    gfx_context ctx = {(uint8_t)(strcmp(argv[1], "expand") == 0 ? 8 : atoi(argv[1]))};
     unsigned tile_size = ctx.bpp == 4 ? 128 : 256;
     assert(size > 0 && size < 65536 && pixels % tile_size == 0);
     gfx_error (*load)(gfx_context*, const uint8_t*, uint16_t, uint16_t, uint8_t, uint8_t)
-        = strcmp(argv[1], "4") == 0 ? tileset_load_lz77_4bit : tileset_load_lz77;
-    assert(load(&ctx, packed, (uint16_t)size, 0, 0, 0) == GFX_SUCCESS);
+        = strcmp(argv[1], "expand") == 0 ? tileset_load_lz77_4bit :
+          strcmp(argv[1], "4") == 0 ? tileset_load_lz77_4bit : tileset_load_lz77;
+    assert(load(&ctx, packed, (uint16_t)size, 0, offset, opacity) == GFX_SUCCESS);
     assert(uploads == pixels / tile_size);
     assert(memcmp(vram, expected, pixels) == 0);
     uploads = 0;
     upload_error = GFX_INVALID_ARG;
-    assert(load(&ctx, packed, (uint16_t)size, 0, 0, 0) == GFX_INVALID_ARG);
+    assert(load(&ctx, packed, (uint16_t)size, 0, offset, opacity) == GFX_INVALID_ARG);
     assert(uploads == 0);
     return 0;
 }

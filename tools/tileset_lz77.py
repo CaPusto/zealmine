@@ -68,10 +68,11 @@ def lz77_compress(data, window=256, tile_size=TS * TS):
 
 
 def main():
-    """Concatenate SDK raw 8bpp tilesets in input order, then compress."""
+    """Concatenate SDK raw tilesets of one bit depth, then compress."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("-i", required=True, type=Path, nargs="+",
-                        help="raw 8bpp tilesets, in VRAM order")
+                        help="raw tilesets, in VRAM order")
+    parser.add_argument("--tile-size", type=int, choices=(128, 256), default=256)
     parser.add_argument("-o", required=True, type=Path, help="LZ77 output tileset")
     args = parser.parse_args()
     try:
@@ -80,13 +81,13 @@ def main():
             data = path.read_bytes()
             if not data:
                 parser.error(f"{path}: input tileset is empty")
-            if len(data) % (TS * TS):
-                parser.error(f"{path}: input must contain whole 256-byte tiles")
+            if len(data) % args.tile_size:
+                parser.error(f"{path}: input must contain whole {args.tile_size}-byte tiles")
             inputs.append(data)
         data = b"".join(inputs)
-        if len(data) > 256 * TS * TS:
+        if len(data) > 256 * args.tile_size:
             parser.error("input exceeds 256 tiles")
-        packed = lz77_compress(data)
+        packed = lz77_compress(data, tile_size=args.tile_size)
         if len(packed) > 0xFFFF:
             parser.error("compressed output exceeds 65,535 bytes")
         args.o.write_bytes(packed)

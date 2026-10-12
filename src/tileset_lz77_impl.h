@@ -42,16 +42,21 @@ gfx_error LZ77_LOADER(gfx_context* ctx, const uint8_t* data, uint16_t size,
 #else
         if (j == 0) {
 #endif
-            /* Keep 256 bytes of history, but upload each completed native tile. */
+            /* Keep 256 bytes of history; select output format only at tile upload. */
 #if LZ77_TILE_BYTES == 128
             uint8_t* tile = win + (j == 0 ? 128 : 0);
 #else
             uint8_t* tile = win;
 #endif
+#if LZ77_TILE_BYTES == 128
+            gfx_error err = upload_packed_tile(ctx, tile, tile_count, from,
+                                               pal_offset, opacity);
+#else
             gfx_error err = gfx_tileset_load_none(
                 ctx, tile, LZ77_TILE_BYTES,
-                (uint16_t)(from + (uint16_t)tile_count * LZ77_TILE_BYTES),
+                (uint16_t)(from + tile_count * LZ77_TILE_BYTES),
                 pal_offset, opacity);
+#endif
             if (err)
                 return err;
             tile_count++;

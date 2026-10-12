@@ -15,8 +15,6 @@ from tileset_lz77 import lz77_decompress
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-ZTS = os.path.join(ROOT, "build", "assets", "tiles.zts")
-ZTP = os.path.join(ROOT, "build", "assets", "tiles.ztp")
 OUT = os.path.join("/tmp/opencode", "tiles_preview.png")
 
 TS = 16
@@ -38,13 +36,28 @@ def read_palette(path):
     return colors
 
 
-def main():
-    if not os.path.exists(ZTS) or not os.path.exists(ZTP):
-        sys.exit("run the cmake build first, %s is missing" % ZTS)
+def load_gameplay_assets(directory):
+    """Reproduce SDK expansion and palette offsets for gameplay previews."""
+    from pathlib import Path
+    directory = Path(directory)
+    pixels, palette, offsets = bytearray(), bytearray(), {}
+    for name in ("soldier", "board", "divider"):
+        offsets[name] = len(palette) // 2
+        palette.extend((directory / f"{name}_tiles.ztp").read_bytes())
+    for name, packed in [("board", True), ("divider", True), ("soldier", False)]:
+        raw = lz77_decompress((directory / f"{name}.zts").read_bytes())
+        if packed:
+            raw = bytes(n for byte in raw for n in (byte >> 4, byte & 15))
+        pixels.extend(index + offsets[name] if index else 0 for index in raw)
+    return bytes(pixels), bytes(palette)
 
-    palette = read_palette(ZTP)
-    raw = open(ZTS, "rb").read()
-    pixels = lz77_decompress(raw)
+
+def main():
+    pixels, palette_bytes = load_gameplay_assets(os.path.join(ROOT, "build", "assets"))
+    import struct
+    palette = []
+    for (v,) in struct.iter_unpack("<H", palette_bytes):
+        palette.append((((v >> 11) & 31) << 3, ((v >> 5) & 63) << 2, (v & 31) << 3))
 
     total_tiles = len(pixels) // (TS * TS)
     if total_tiles < USED_TILES:
@@ -66,7 +79,7 @@ def main():
         d.rectangle([ox, oy, ox + TS - 1, oy + TS - 1], outline=(255, 0, 255))
     sheet.save(OUT)
 
-    print("tileset bytes : %d" % len(raw))
+    print("tileset bytes : %d" % sum(os.path.getsize(os.path.join(ROOT, "build", "assets", n + ".zts")) for n in ("board", "divider", "soldier")))
     print("decoded tiles : %d" % total_tiles)
     print("palette colors: %d" % len(palette))
     print("palette[0]    : %s (must never be drawn)" % (palette[0],))
