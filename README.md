@@ -24,13 +24,13 @@ RAM limit.
 
 ## Controls
 
-| Action                | Keys                               |
-|-----------------------|------------------------------------|
-| Move the cursor       | Arrows / W A S D                   |
-| Reveal / chord        | Z / Space                          |
-| Flag a mine           | X                                  |
-| Restart               | R                                  |
-| Quit (back to the OS) | Q                                  |
+| Action               | Keys             | SNES controller |
+|----------------------|------------------|-----------------|
+| Move the cursor      | Arrows / W A S D | D-pad           |
+| Reveal / chord       | Z / Space        | B               |
+| Flag a mine          | X                | A               |
+| Restart              | R                | R shoulder      |
+| Quit (back to the OS) | Q                | L shoulder      |
 
 ## Building
 
