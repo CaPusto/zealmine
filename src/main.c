@@ -264,7 +264,8 @@ int main(void)
 
         wait_any_key();
 
-        render_start_game();
+        if (render_start_game() != GFX_SUCCESS)
+            return 1;
         game_new();
 
         while (quitting == 0) {

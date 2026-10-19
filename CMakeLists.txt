@@ -26,6 +26,7 @@ add_executable(${target_name}
     src/render.c
     src/field.c
     src/tileset_lz77.c
+    src/tileset_loader.c
 )
 
 target_include_directories(${target_name} PRIVATE src)
@@ -54,72 +55,79 @@ target_compile_options(${target_name} PRIVATE
 # -------------------------------
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
-set(TILES_GIF ${CMAKE_CURRENT_LIST_DIR}/assets/tiles.gif)
-set(TILES_GEN ${CMAKE_CURRENT_LIST_DIR}/tools/gif2image.py)
 set(ASSETS_DIR ${CMAKE_BINARY_DIR}/assets)
+set(TILESET_CODEC ${CMAKE_CURRENT_LIST_DIR}/tools/tileset_lz77.py)
+set(BOARD_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/board_tiles.gif)
+set(BOARD_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/board_tiles.tsx)
+set(DIVIDER_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/divider_tiles.gif)
+set(DIVIDER_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/divider_tiles.tsx)
+set(SOLDIER_ATLAS ${CMAKE_CURRENT_LIST_DIR}/assets/soldier_tiles.gif)
+set(SOLDIER_TILESET ${CMAKE_CURRENT_LIST_DIR}/assets/soldier_tiles.tsx)
 
-# gif2zeal.py masks the RGB565 green channel to 5 bits instead of 6, so it is
-# replaced by tools/gif2image.py, which produces byte identical tilesets.
-#
-# Pictures drawn over the board cannot have a tileset of their own -- the video
-# board keeps one for the whole screen -- so they share the sheet's palette and
-# are merged into its tileset, each leaving a .ztm of the tile indices it landed
-# on. Adding another one, such as the win and lose pictures, is one word in
-# BOARD_IMAGES.
+# Tile positions retain board, divider, soldier order; palettes are local.
+gif2zeal(${target_name} BIT 4 COLORS 14 FILES ${BOARD_ATLAS})
+gif2zeal(${target_name} BIT 4 COLORS 10 FILES ${DIVIDER_ATLAS})
+gif2zeal(${target_name} BIT 8 COLORS 41 FILES ${SOLDIER_ATLAS})
+
 set(BOARD_IMAGES use_keys_8bit A_SAPPER_MAKES_ONLY_ONE_MISTAKE retro_divider_320x16 soldier_neutral Congratulations Oops soldier_congratulations soldier_defeat)
-
-set(BOARD_IMAGE_ARGS)
 set(BOARD_IMAGE_ZTMS)
-set(BOARD_IMAGE_GIFS)
 foreach(image IN LISTS BOARD_IMAGES)
-    set(gif ${CMAKE_CURRENT_LIST_DIR}/assets/${image}.gif)
-    list(APPEND BOARD_IMAGE_GIFS ${gif})
-    list(APPEND BOARD_IMAGE_ARGS
-         -o ${gif}
-         -m ${ASSETS_DIR}/${image}.ztm)
-    list(APPEND BOARD_IMAGE_ZTMS ${ASSETS_DIR}/${image}.ztm)
+    set(tmx ${CMAKE_CURRENT_LIST_DIR}/assets/${image}.tmx)
+    set(ztm ${ASSETS_DIR}/${image}.ztm)
+    tiled2zeal(${target_name} LAYER 1 FILES ${tmx})
+    # SDK conversion depends on the TMX; also track its authored tileset.
+    add_custom_command(OUTPUT ${ztm} APPEND
+        DEPENDS ${BOARD_TILESET} ${BOARD_ATLAS} ${DIVIDER_TILESET} ${DIVIDER_ATLAS}
+                ${SOLDIER_TILESET} ${SOLDIER_ATLAS})
+    list(APPEND BOARD_IMAGE_ZTMS ${ztm})
 endforeach()
 
-add_custom_command(
-    OUTPUT ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp ${BOARD_IMAGE_ZTMS}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${ASSETS_DIR}
-    COMMAND ${Python3_EXECUTABLE} ${TILES_GEN}
-            -i ${TILES_GIF}
-            -t ${ASSETS_DIR}/tiles.zts
-            -p ${ASSETS_DIR}/tiles.ztp
-            ${BOARD_IMAGE_ARGS}
-    DEPENDS ${TILES_GIF} ${TILES_GEN} ${BOARD_IMAGE_GIFS}
-    COMMENT "Converting assets/tiles.gif"
-    VERBATIM
-)
+set(BOARD_PACKED_ASSETS)
+foreach(atlas board divider soldier)
+    if(atlas STREQUAL "soldier")
+        set(tile_bytes 256)
+    else()
+        set(tile_bytes 128)
+    endif()
+    set(packed ${ASSETS_DIR}/${atlas}.zts)
+    add_custom_command(
+        OUTPUT ${packed}
+        COMMAND ${Python3_EXECUTABLE} ${TILESET_CODEC}
+                -i ${ASSETS_DIR}/${atlas}_tiles.zts -o ${packed} --tile-size ${tile_bytes}
+        DEPENDS ${ASSETS_DIR}/${atlas}_tiles.zts ${TILESET_CODEC}
+        COMMENT "Packing SDK ${atlas} tiles"
+        VERBATIM
+    )
+    list(APPEND BOARD_PACKED_ASSETS ${packed} ${ASSETS_DIR}/${atlas}_tiles.ztp)
+endforeach()
 
-# The title is a whole screen, so it needs a tilemap of its own on top of the
-# palette and tileset, and the tileset has to be trimmed to fit in tiles VRAM.
+# The source title already fits VRAM and reserves palette index 0. SDK
+# conversion is lossless; only validation and LZ77 packing remain.
 set(TITLE_GIF ${CMAKE_CURRENT_LIST_DIR}/assets/zeal_mine_title.gif)
-set(TITLE_GEN ${CMAKE_CURRENT_LIST_DIR}/tools/title2tiles.py)
+gif2zeal(${target_name} BIT 4 COLORS 16 UNIQUE TILEMAP FILES ${TITLE_GIF})
+set(TITLE_RAW ${ASSETS_DIR}/zeal_mine_title)
+set(TITLE_PACKER ${CMAKE_CURRENT_LIST_DIR}/tools/pack_title.py)
 
 add_custom_command(
     OUTPUT ${ASSETS_DIR}/title.ztp ${ASSETS_DIR}/title.zts ${ASSETS_DIR}/title.ztm
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${ASSETS_DIR}
-    COMMAND ${Python3_EXECUTABLE} ${TITLE_GEN}
-            -i ${TITLE_GIF}
-            -p ${ASSETS_DIR}/title.ztp
-            -t ${ASSETS_DIR}/title.zts
-            -m ${ASSETS_DIR}/title.ztm
-    DEPENDS ${TITLE_GIF} ${TITLE_GEN}
-    COMMENT "Converting assets/zeal_mine_title.gif"
+    COMMAND ${Python3_EXECUTABLE} ${TITLE_PACKER}
+            -i ${TITLE_RAW}
+            -o ${ASSETS_DIR}/title
+    DEPENDS ${TITLE_RAW}.zts ${TITLE_RAW}.ztp ${TITLE_RAW}.ztm
+            ${TITLE_PACKER} ${TILESET_CODEC}
+    COMMENT "Packing SDK title assets"
     VERBATIM
 )
 
 add_custom_target(zealmine_tiles_asset ALL
-    DEPENDS ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp ${BOARD_IMAGE_ZTMS}
+    DEPENDS ${BOARD_PACKED_ASSETS} ${BOARD_IMAGE_ZTMS}
             ${ASSETS_DIR}/title.ztp ${ASSETS_DIR}/title.zts ${ASSETS_DIR}/title.ztm)
 add_dependencies(${target_name} zealmine_tiles_asset)
 
 # assets.c pulls the assets in with .incbin, which CMake cannot see, so the
 # translation unit is forced to rebuild whenever the generated files change.
 set_source_files_properties(src/assets.c PROPERTIES
-    OBJECT_DEPENDS "${ASSETS_DIR}/tiles.zts;${ASSETS_DIR}/tiles.ztp;${BOARD_IMAGE_ZTMS};${ASSETS_DIR}/title.ztp;${ASSETS_DIR}/title.zts;${ASSETS_DIR}/title.ztm")
+    OBJECT_DEPENDS "${BOARD_PACKED_ASSETS};${BOARD_IMAGE_ZTMS};${ASSETS_DIR}/title.ztp;${ASSETS_DIR}/title.zts;${ASSETS_DIR}/title.ztm")
 
 # -------------------------------
 # Convert to binary
@@ -134,12 +142,12 @@ set(DIGITS_CHECKED ${CMAKE_BINARY_DIR}/.digits_checked)
 add_custom_command(
     OUTPUT ${DIGITS_CHECKED}
     COMMAND ${Python3_EXECUTABLE} ${DIGITS_CHECK}
-            --zts ${ASSETS_DIR}/tiles.zts
-            --ztp ${ASSETS_DIR}/tiles.ztp
-            --header ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h
+            --zts ${ASSETS_DIR}/board.zts
+            --ztp ${ASSETS_DIR}/board_tiles.ztp
+            --bit 4 --header ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h
     COMMAND ${CMAKE_COMMAND} -E touch ${DIGITS_CHECKED}
-    DEPENDS ${ASSETS_DIR}/tiles.zts ${ASSETS_DIR}/tiles.ztp
-            ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h ${DIGITS_CHECK}
+    DEPENDS ${ASSETS_DIR}/board.zts ${ASSETS_DIR}/board_tiles.ztp
+            ${CMAKE_CURRENT_LIST_DIR}/src/zealmine.h ${DIGITS_CHECK} ${TILESET_CODEC}
     COMMENT "Checking number tiles against TILE_NUM* constants"
     VERBATIM
 )

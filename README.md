@@ -24,13 +24,13 @@ RAM limit.
 
 ## Controls
 
-| Action                | Keys                               |
-|-----------------------|------------------------------------|
-| Move the cursor       | Arrows / W A S D                   |
-| Reveal / chord        | Z / Space                          |
-| Flag a mine           | X                                  |
-| Restart               | R                                  |
-| Quit (back to the OS) | Q                                  |
+| Action               | Keys             | SNES controller |
+|----------------------|------------------|-----------------|
+| Move the cursor      | Arrows / W A S D | D-pad           |
+| Reveal / chord       | Z / Space        | B               |
+| Flag a mine          | X                | A               |
+| Restart              | R                | R shoulder      |
+| Quit (back to the OS) | Q                | L shoulder      |
 
 ## Building
 
@@ -55,7 +55,15 @@ cmake --build build -j
 ```
 
 The result lands in `bin/zealmine.bin`. The tile assets are regenerated from
-the source GIFs in `assets/` at build time by `tools/`.
+the source GIFs and Tiled layouts in `assets/` at build time.
+
+## Building with ZDE
+
+The Zeal Dev Environment supplies the toolchain and SDK paths. From the project directory, run:
+
+```sh
+zde cmake
+```
 
 ## Running
 
@@ -100,10 +108,10 @@ python tools/preview_title.py -a build/assets
 ## Layout
 
 ```
-assets/    source GIFs (tiles, title, banners, soldier poses)
+assets/    board, divider, soldier atlases; Tiled layouts; title GIF
 src/       game, renderer, field logic, LZ77 tileset decoder
-tools/     asset generators, checks, emulator driver (run_emu.py)
-tests/     host C unit tests
+tools/     asset packing, checks, emulator driver (run_emu.py)
+tests/     host C and asset regression tests
 docs/      screenshots
 bin/       prebuilt release binary (RC1)
 ```
